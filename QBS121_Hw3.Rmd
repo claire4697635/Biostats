@@ -1,0 +1,270 @@
+---
+title: "QBS121_Hw3"
+output: html_document
+---
+
+# QBS121 HW3
+
+## Assignment on Logistic Regression
+
+
+### 1.a Write the log likelihood for the logistic regression model
+$logit(Pr[Y|X_1=x_1,X_2=x_2])=\beta_0 + \beta_1 x_1 + \beta_2 x_2$.
+
+#### Answer:
+
+
+log likelihood = $\sum_{i=1}^n  y_i(\beta_0 + \beta_1x_{i}1  + \beta_2x_{i2})  - log(1 + e^{\beta_0+\beta_1x_{i1}  + \beta_2x_{i2}})$
+
+
+### 1.b Differentiate with respect to $\beta_0$.
+
+#### Answer:
+Differentiate = $\sum_{i=1}^n y_i - \frac{e^{\beta_0+\beta_1x_{i1}  + \beta_2x_{i2}}}{1 + e^{\beta_0+\beta_1x_{i1}  + \beta_2x_{i2}}}$
+
+
+### 1.c Let $f_i$ be the linear combination $\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2}$ and $p_i = \exp[f_i]/(1+\exp[f_i])$. Interpret $p_i$.
+
+#### Answer:
+$p_i$ is a partial term in the differentiation of log likelihood for the linear combination with respect to $beta_0$. (part of the answer in 1.c)
+$p_i$ is also the logistic curve or the probability for the multiple covariates.
+
+
+### At the maximum likelihoood estimate the derivative above equals zero. Equate the derivative to zero and write in terms of $p_i$. What does the sum $\sum_{i=1}^n p_i$ equal, and what does the mean $\sum_{i=1}^n p_i/n$ equal ?
+
+$\sum_{i=1}^n y_i - \frac{e^{\beta_0+\beta_1x_{i1}  + \beta_2x_{i2}}}{1 + e^{\beta_0+\beta_1x_{i1}  + \beta_2x_{i2}}} = 0$
+
+then $\sum_{i=1}^n y_i = \sum_{i=1}^n p_i$
+
+the mean $\sum_{i=1}^n \frac{p_i}{n}$ equals $\sum_{i=1}^n \frac{y_i}{n}$
+
+### How would you describe $\sum (y_i - p_i)^2/n$ ?
+It is similar to the form of variance. Here we may try to look at the average of the squared differences between $y_i$ and $p_i$ to see how far the set of covariate data is spread out.
+
+## 2. Data Analyses
+
+
+### 2.1 Analysis of Burn Data 
+
+
+#### 2.1.1
+#### 2.1.2 C-index:
+```{r}
+library(aplore3)
+data(burn1000)
+str(burn1000[,"death"])
+# then we know alive is 1, dead is 2
+sum(is.na(burn1000))
+
+# change the data type
+str(burn1000)
+ # in gender column, male =2, female=1
+ # in race column, white =2, non-white =1
+ # in inh_inj column, no =1,
+ # in flame column, yes=2, no=1
+
+
+round((glm.summary.all <- summary(glm.all <- glm(death ~ facility+age+gender+race+tbsa+inh_inj+flame, data=burn1000, family=binomial)))$coef, 3)
+
+# the c-index:
+C.Index.Binary <- function(Y, X) {
+  if (length(table(Y))>2) stop("Y is not binary")
+  keep <- !is.na(Y) & !is.na(X)
+  Y <- as.numeric(Y)
+  X <- as.numeric(X)
+  Y <- Y[keep]
+  X <- X[keep]
+  wilcox.test(X[Y==2], X[Y==1])$stat/prod(table(Y))
+}
+
+C.Index.Binary(burn1000$death, fitted(glm.all))
+```
+the C-index is 0.9663216.
+
+#### 2.1.3 Is the effect of inh_inj on mortality modified by age?
+```{r}
+summary(glm(death~inh_inj*age, data=burn1000, family=binomial))
+```
+The effect of inh_inj on mortality is modified by age. Because the p-values for inh_inj, age, and their interaction are all less than 0.05, which means the results are statistically significant, so the effect of inh_inj on mortality is modified by age
+
+#### 2.1.4 Is the effect of age on mortality modified by inh inj?
+```{r}
+summary(glm(death~age*inh_inj, data=burn1000, family=binomial))
+```
+As we can see, the order of the two tested interacted observations will not change the estimates and p-values. Therefore, the effect of ge on mortality is also modified by inh_inj. 
+
+### 2.2 Analysis of University Admissions Data
+
+#### 2.2.1 Report the univariable associations of GPA, GRE and Rank with Admit.
+```{r}
+ucla.stats <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+
+summary(glm(admit~gpa, data = ucla.stats,family=binomial))$coef
+summary(glm(admit~gre, data = ucla.stats,family=binomial))$coef
+summary(glm(admit~rank, data = ucla.stats,family=binomial))$coef
+
+# or
+cov.all <- as.data.frame(ucla.stats[, c(2:4)])
+Univ <- matrix(nrow=0, ncol=4)
+dimnames(Univ)[[2]] <- c("Odds Ratio", "95%CI Lo", "Up", "P-value") 
+for (i in 1:dim(cov.all)[2]) {
+  os <- summary(glm(ucla.stats$admit ~ cov.all[,i], family=binomial))
+  Univ <- rbind(Univ, c(exp(os$coef[2,1:2] %*% matrix(nrow=2, ncol=3, c(1,0,1,-2,1,+2))), os$coef[2,4]))
+}
+dimnames(Univ)[[1]] <- names(cov.all)
+Univ
+```
+Each univariable associations has a statistically significant estimate because p-value < 0.05. 
+
+We then can conclude that when gpa is increased by one unit, the admit is increased by 1.051109 unit of length; when gre is increased by one unit, the admit is increased by 0.003582212 unit of length; when rank is increased by one unit, the admit is decreased by 0.5862851 unit of length.
+
+Similarly, the odds ratio of gre and gpa is greater than 1, so admit increases when gre or gpa increases. But the odds ratio of rank is less than 1, so admit decreases when rank increases.
+
+  
+#### 2.2.2 Develop a multivariable model:
+```{r}
+cov.all <- as.matrix(ucla.stats[,2:4])
+summary(o.all <- glm(admit ~ cov.all, data = ucla.stats,family=binomial))
+
+# or
+summary(o.all <- glm(admit ~ gpa + gre + rank, data = ucla.stats,family=binomial))
+
+```
+Under a multivariable model , the p-values are still less than 0.05, so the estimate results are statistically significant. We can conclude that when controlling for gre and rank, one unit of gpa increased would increase the admit by 0.777014 unit of length; when controlling for gpa and rank, one unit of gre increased would increase the admit by 0.002294 unit of length; when controlling for gpa and gre, one unit of rank increased would decrease the admit by 0.560031 unit of length.
+
+
+#### 2.2.4 Do any quadratic terms, or interactions add predictive ability?
+```{r}
+
+n.var <- dim(cov.all)[2]
+Inter <- matrix(nrow=dim(cov.all)[1], ncol=(n.var)*(n.var+1)/2) # actually makes squares too
+count <- 1
+Cov.Names <- substr(dimnames(cov.all)[[2]], 1, 10)
+I.Name <- c()
+for (i in 1:n.var) {
+  for (j in 1:i) {
+    Inter[, count] <-- cov.all[,i]*cov.all[,j]
+    count <- count + 1
+    I.Name <- c(I.Name, paste(Cov.Names[i], "+", Cov.Names[j]))
+  }
+}
+dimnames(Inter)[[2]] <- I.Name
+
+CovI <- cbind(cov.all, Inter)
+str(CovI)
+
+######## the glmnet function couldn't be found when I knit to pdf, so I just comment on the below code #########
+
+library(glmnet)
+(oi <- glmnet(y=ucla.stats$admit, x = CovI, family="binomial"))
+plot(oi)
+(oi.cv <- cv.glmnet(y=ucla.stats$admit, x = CovI, family="binomial"))
+plot(oi.cv)
+
+
+# or
+summary(glm(admit~gpa*gre*rank, data = ucla.stats,family=binomial))
+```
+the interactions of gpa and gre, gpa and rank, gre and rank, gpa and gre, as well as the quadratic terms all have the p-values greater than 0.05, which are not statistically significant. Therefore they don't have predictive ability.
+
+
+#### 2.2.5 Report the C-statistic:
+```{r}
+sum(is.na(ucla.stats))
+str(ucla.stats)
+#C.Index.Binary(ucla.stats$admit, fitted(o.all))
+
+
+# or
+Y <- ucla.stats
+Fit <- fitted(o.all)
+cut.offs <- sort(unique(fitted(glm.all)))
+Sens <- Spec <- PPV <- NPV <- (n.l <- length(cut.offs))
+for (i in 1:n.l) {
+  Sens[i] <- sum(Fit >  cut.offs[i] & Y==1) / sum(Y==1)
+  Spec[i] <- sum(Fit <= cut.offs[i] & Y==0) / sum(Y==0)
+  PPV[i] <- sum(Fit >  cut.offs[i] & Y==1) / sum(Fit >  cut.offs[i])
+  NPV[i] <- sum(Fit <= cut.offs[i] & Y==0) / sum(Fit <= cut.offs[i])
+}
+
+sum(Sens * diff(c(0,Spec))) # integral for area udner the ROC
+```
+The C-statistic is 0.751208.
+
+
+### 2.3 Data With a Zero Cell
+```{r}
+Treatment = rep(c(0,1,0,1),each=10)
+Female = rep(c(0,1),each=20)
+Success = rep(rep(0:1,4), times=c(8,2,5,5,5,5,0,10))
+sum(Success==1)
+sum(Treatment==1)
+
+
+# success frequency: we see that the number of success==1 is 22 out of 40
+zero.table <- as.data.frame(cbind(Success, Treatment, Female))
+# for Treatment = 0 & Female = 0, success frequency = 2/10=0.2
+# for Treatment = 1 & Female = 0, success frequency = 5/10=0.5
+# for Treatment = 0 & Female = 1, success frequency = 5/10 = 0.5
+# for Treatment = 1 & Female = 1, success frequency = 10/10 = 1
+
+
+
+# odds ratio relating Success to Treatment:
+os1 <- summary(glm(Success ~ Treatment, family=binomial))
+exp(os1$coef["Treatment",1])
+
+#odds ratio relating Success to Gender.
+os2 <- summary(glm(Success ~ Female, family=binomial))
+exp(os2$coef["Female",1])
+
+summary(glm(Success ~ Treatment * Female, family=binomial))
+```
+When do a interaction of treatment and gender in a logistic regression, we see that the estimated coefficients of Treatment and Female are the same. The p-values of treatment and female are also the same, both greater than 0.05. 
+Because "Treatment = rep(c(0,1,0,1),each=10)"
+and "Female = rep(c(0,1),each=20)"
+do same thing.
+
+Their interaction coefficient has a p-value close to 1 (0.99), so non of the estimated coefficients are statistical significant.
+
+
+
+## 3. Simulate and Analyze
+
+\begin{enumerate}
+
+### 3.1 
+
+```{r}
+n = 2500
+Z1 = rnorm(n)
+Z2 = rnorm(n)
+X = 0.7*rnorm(n) + 0.7*Z2
+Lin = 0*X - 0.0*Z1 + 0.5*Z2 # causal model
+Y = runif(n) < 1/(1+exp(-Lin))
+summary(t.all <- glm(Y ~ X + Z1, family=binomial))
+plot(t.all)
+```
+The estimate of the coefficient for X adjusting for covariate Z1 is significantly different from zero because: 
+firstly, X and Lin has similar terms "0.7*Z2" and "0.5*Z2"; and secondly, Lin and Y match the logistic regression model, as Y is defined according to "1/(1+exp(-Lin))" where for a logistic regession it should be the form of "exp(x)/[1+exp(x)]".
+However, Y is not modified by Z1 since Z1 is just a noise that has not a logistic regression with Y.
+
+
+### 3.2 What does the following simulated data and analysis indicate about {\it probit} regression?
+
+```{r}
+beta <- c(1, -1, +2)
+cutoff <- 0.5
+n <- 10^4
+X <- cbind(runif(n) < 0.25, runif(n) < 0.50, rnorm(n))
+Y <- X %*% beta + rnorm(n)
+binary.Y <- ifelse(Y < cutoff, 1, 0)
+summary(glm(binary.Y ~ X, family=binomial(probit)))
+summary(glm(binary.Y ~ X, family=binomial)) # for comparison with probit
+```
+Probit regression is used to model dichotomous or binary outcome variables. In the probit model, the inverse standard normal distribution of the probability is modeled as a linear combination of the predictors. In other words, the probit regression supposes that a latent dependent variable  Y exists that is continuous and normally distributed and that the binary dependent variable is a dichotomization of it
+
+Both of the tests have statistically significant data since their p-values are all very small. The z values are very close to each other, but the estimated coefficients are not so close. However, the coefficients from the two regressions still have the same sign. In other words, both the intercepts are positive, coefficients of the two X1 and two X3 are negative, and coefficients of the two X2 are positive. The two regression models tend to have similar results.
+
+### 3.3 Comment on the simlarities and differences the probit and logistic regressions, such as the Z values for the three covariates in the model.
+The two regressions both have very small p-values and their z values are very close to each other. Their coefficients are not so close to each other, but the signs of the values (positive or negative) are the same in the two regressions. The standard Errors from the two regressions are different, but a smaller standard error of a coefficient in probit regression tend to be also kind of small in logistic regression.
