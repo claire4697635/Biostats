@@ -1,0 +1,255 @@
+---
+title: "QBS120_problemset1"
+output:
+  pdf_document: default
+  html_document: default
+Author: Claire Wang
+---
+
+
+** The code part is updated according to the solution manual **
+```{r Chpt 1 Problem 1}
+# QBS 120 HW # 1
+#Author: Claire Wang
+# Chpt 1 Problem 1
+# Two bases in a DNA molecule are measured. The value of each base can be one of A, C, T or G. Assume the values of the two bases are independent. Compute answers to the following using R:
+
+# a) 
+# the sample space is the set of all possible outcomes:
+# Each base has 4 possible outcomes. Since the two bases are independent, the total result will be calculated by multiplication principal:
+sample.space.size = 4*4
+sample.space.size
+# samplesize = 16
+
+
+# b)
+# samplespace = {AA,AC,AT,AG,CA,CC,CT,CG,TA,TC,TT,TG,GA,GC,GT,GG}
+bases <- c("A", "C", "T", "G")
+omega <- expand.grid(b1=bases, b2=bases)
+omega
+
+
+# c)
+# E1 = {AA,CC,TT,GG}
+omega$same <- apply(omega, 1, function(x) {
+           if (x[1] == x[2]) {
+           return (T)
+}        
+  return (F)
+ })
+in.E.1 = which(omega$same)
+omega[in.E.1,]
+
+# d)
+# E2 = {AC,AT,AG,CA,CT,CG,TA,TC,TG,GA,GC,GT}
+in.E.2 = which(!omega$same)
+omega[in.E.2,]
+
+# e)
+# E3 = {AA,AC,AT,AG}
+omega$firstA = apply(omega, 1, function(x) {
+  if (x[1] == "A") {
+    return (T)
+  }
+  return (F)
+})
+in.E.3 = which(omega$firstA)
+omega[in.E.3,]
+
+# f)
+# The intersection of E1 and E3 is = {AA}
+E.1.intersect.E.3 = intersect(in.E.1, in.E.3)
+omega[E.1.intersect.E.3,]
+
+# g)
+# The union of E1 and E3 is = {AA,CC,TT,GG,AC,AT,AG}
+E.1.union.E.3 = union(in.E.1, in.E.3)
+omega[E.1.union.E.3,]
+```
+
+
+** The code part is updated according to the solution manual **
+```{r Problem 2}
+# Problem 2
+# a) three players
+# (51 choose 17) * ((51-17) choose 17) * ((51-17*2) choose 17)
+Deal1 <- choose(51,17) * choose(51-17,17) * choose(51-17*2,17)
+
+(num.3.person.deals = factorial(51)/(factorial(17)^3))
+# Deal 1 = 3.446986e+22
+
+# b)
+# (52 choose 13) * ((52-13) choose 13) * ((52-13*2) choose 13) * ((52-13*3) choose 13)
+
+Deal2 <- choose(52,13) * choose(52-13,13) * choose(52-13*2,13) * choose(52-13*3,13)
+(num.4.person.deals = factorial(52)/(factorial(13)^4))
+# Deal2 = 5.364474e+28
+
+# c)
+num.4.person.deals/num.3.person.deals
+# before computing, I thought case b will be larger: firstly, no card is discarded; secondly, a four-player game would be harder than a three-player game, partially means that the possible outcomes of card-combinations willd be more flexible and complexed intuitively.
+```
+
+```{r Problem 3: Rice 1.18}
+# Problem 3: Rice 1.18
+# let E1 = {at least one defective item turns up}.
+# then E2 = {none of the defective items turns up} = 1 - E1
+# P(E1) = 1 - P(E2)
+
+# a) n = 1000, k = 10
+# m = 1:1000
+m1 <- 140:160
+E2 <- choose(1000-10,m1)
+PE2 <- E2/choose(1000,m1)
+PE1 <- 1 - PE2
+plot(m1, PE1, pch=20)
+abline(h = 0.8)
+# m ~ 150 when PE1 = 0.8, so let's narrow down the range of m to find the specific point where PE1 starts to = 0.8
+# m = 148
+
+# b) n = 1000, k = 100
+#m2 = 1:1000
+m2 <- 10:25
+E2_2 <- choose(1000-100,m2)
+PE2_2 <- E2_2/choose(1000,m2)
+PE1_2 <- 1 - PE2_2
+plot(m2, PE1_2, pch=20)
+abline(h = 0.8)
+# similarly, m ~ 20 when PE1_2 = 0.8, so let's narrow down the range of m to find the specific point where PE1 starts to = 0.8
+# m2 = 16. (when m2 = 15, Probability is slightly below 0.8)
+```
+
+
+```{r Problem 4: Rice 1.49}
+# Problem 4: Rice 1.49
+# a)
+# let A = {there was at least one head}, B = {there were two or more heads}
+# P(B|A) = P(B intersects A)/P(A) = P(B)/P(A)
+P_A <- 1 - (1/2)^4
+P_B <- 1 - (1/2)^4 - choose(4,1) * (1/2)*(1/2)^3
+P_result <- P_B/P_A
+P_result
+# P_resut = 0.733
+
+# b)
+# let M = {at least one tail}, M_c = {no tail}, N = {sample space}
+M_c <- 1
+N <- 2^4
+# P = M/C
+P <- 1 - M_c/N
+P
+# P = 0.9375
+```
+
+```{r Problem 5: Rice 1.75}
+# Problem 5: Rice 1.75
+# use law of total probability: 
+# the first part is the first generation dies, the second part is the first generation survives while the second generation people both die so there are no third generation
+# let P_1 = P(the first part), P_2 = P(the second part)
+# then P_3 = (1-p) + p*(1-p)^3
+
+# if P_3 = 0.5, -p^4 + 3p^3 -3p^2 + 0.5 = 0
+library(polynom)
+P_3 <- polynomial(coef = c(0.5,0,-3,3,-1))
+solve(P_3)
+# P_3 = 0.5500955
+
+
+```
+
+```{r Chpt 2 Problem 1}
+# Chpt 2 Problem 1
+# Random variables are functions from Ω to the realnumbers
+# A discrete RV is a random variable that can take on only a finite or at most a countably infinite number of values, its sample space can be listed: samplespace = {a,b,c,d,...}
+# A continuous RV is a range, that you cannot list the elements in the sample space one by one...
+```
+
+```{r Problem 3}
+# Problem 3
+# The number is observed from an experiment, so no matter it is a fixed measurement such as the length of an object, it is a RV sampling from the experiment
+```
+
+
+
+** Corrected the regions of CDF **
+
+```{r Problem 4: Rice 2.9}
+# Problem 4: Rice 2.9
+vals <- seq(0,1, by=0.001)
+p_2of3 <- sapply(vals, function(x){
+  return( dbinom(2,size=3,prob=x) + dbinom(3, size = 3, prob = x) )})
+plot(vals,p_2of3, pch=1)
+#lines(vals, p_2of3, pch=1, col="red")
+
+p <- vals
+
+#p_1of3 <- sapply(vals, function(x){
+  #return(dbinom(1,size=3,prob=x))})
+lines(vals, p,pch=1, col="blue")
+#lines(vals, 1-p, pch=1, col="blue")
+# from the plot, we know that when p = vals = 0.5, a two-out-of-three majority decoder is better than transmission of the message once
+```
+```{r Problem 5: Rice 2.40}
+# a)
+x <- seq(0,2, by=0.001)
+f <- function(x){x*(x+1)}
+integrate(f,0,2) # which equals 1/c, which is 0.8333
+
+c <- 1/4.67
+c
+# c <- 0.21
+
+# b)
+# densityf <- function(x){0.21*x*(x+1)}
+# CDF <- integrate(densityf,0,x)
+CDF = 0.21*(1/3*x^3+1/2*x^2) # for 0 <=x <= 2
+  # = 0 for x < 0,
+  # = 1 for x > 2
+plot(x,CDF)
+
+# c)
+densityf <- function(x){0.21*x*(x+1)}
+P <- integrate(densityf,0.1,0.5)
+P
+# P = 0.034
+```
+
+
+```{r Problem 6: Rice 2.52}
+# Problem 6: Rice 2.52
+# a)
+tall <- 6*12   # convert from ft to in
+Proportion <- pnorm(72, 70, 3)
+Proportion
+
+# b)
+# no matter if they are in cm or m, the distribution of height is always standard normal distribution
+```
+
+
+```{r}
+# data set problem
+# a)
+library(multtest)
+data("golub")
+#View(golub)
+
+golubb <- as.data.frame(golub)
+X <- golubb$V1
+plot(X, main = "V1 mRNA Tumor Sample dataset")
+hist(X, main = "V1 mRNA Tumor Sample histogram")
+plot(density(X), main = "V1 mRNA Tumor Sample density")
+# gene expression values are continuous RV since it changes as time changes
+
+# b)
+library(datasets)
+data("esoph")
+agegroup <- esoph$agegp
+alcgroup <- esoph$alcgp
+plot(agegroup, main = "Age group")
+plot(alcgroup, main = "Alcohol group")
+# this case the values are discrete RV because the elements are countable, 
+# plus it is not an experiment that records individual's values periodically, 
+# but just records the final results.
+
+```
