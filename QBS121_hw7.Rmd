@@ -1,0 +1,96 @@
+---
+title: "QBS121 Assignment 7"
+output: html_document
+---
+
+# Assignment on Propensity Scores and Missing Data
+
+## 1 Mising Data
+
+
+```{r}
+n = 10^5
+X = runif(n) < 0.5
+Z = rnorm(n)
+Noise = rnorm(n)
+Y = X + Z + Noise
+
+summary(lm(Y ~ X + Z))
+
+Zm = ifelse(runif(n) < 0.40, NA, Z)
+DF = data.frame(Y, X, Zm)
+```
+
+### 1.   Is Zm missing at random?
+Zm is missing at random. Zm = ifelse(runif(n) < 0.40, NA, Z) means if runif(n)<0.4, then Zm is NA; if runif(n) >= 0.4, then Zm = Z. While runif is to generate random deviates with equally possible values, so Zm basically just generates an array where 40% of them are missing values.
+
+
+### 2. Impute Zm by its mean
+```{r}
+Zi <- ifelse(is.na(Zm), mean(Zm, na.rm=TRUE), Zm)
+summary(lm(Y ~ X + Zi))$coef
+```
+
+
+### 3. 
+From the results above, we can see that the coefficiens from the imputed Zm model is relatively different from the true values from the unimputed Zm model.
+
+
+### 4.
+```{r}
+summary(lm(Y ~ X + Z))$r.squared
+summary(lm(Y ~ X + Zi))$r.squared
+
+```
+The r-squared is relatively different from the model in which Zi was used.
+
+
+### 5.
+Use imputation formed by other covariates:
+```{r}
+Z.lm <- lm(Y ~ X + Z)
+Z.fit <- ifelse(is.na(Z), cbind(1,X) %*% Z.lm$coef, Z)
+summary(o.mn.imp <- lm(Y ~ X+Z.fit))
+
+```
+Now the coefficients and R-squared value from the reimputed Z model are very close to the original Z model.
+
+
+
+## 2 ropensity Scores
+
+### 1. Odds ratio
+```{r}
+setwd("~/Documents/QBS 121")
+ho <-  read.delim("~/Documents/QBS 121/Teaching Hospital Outcomes.txt")
+ho <- as.data.frame(ho)
+os <- summary(glm(TeachingHospital ~ ., data=ho, family=binomial))
+exp(os$coef["UNFAVDX",1])
+```
+
+
+### 2. Propensity
+```{r}
+Model <- (o <- glm(UNFAVDX ~ (Age+Female+Black+Race.Other+Hispanic+DM+HTN)^2,data=ho, family="binomial"))
+Propensity <- Model$fit
+boxplot(split(Propensity,ho$UNFAVDX))
+IWP <- ifelse(ho$UNFAVDX,1/Propensity, 1/(1 - Propensity))
+
+```
+
+
+### 3. 10 bins of the propensity score:
+```{r}
+library(randomForest)
+Bins <- cut(Propensity,quantile(Propensity, (0:10)/10), include.lowest = TRUE)
+(os1 <- summary(glm(ho$TeachingHospital ~ ho$UNFAVDX + Bins, family=binomial)))$coef[2,]
+exp(os1$coef[2,1])
+
+```
+
+
+### 4.  Calculate inverse propensity weights
+```{r}
+(os2 <- summary(glm(ho$TeachingHospital ~ ho$UNFAVDX, weight=IWP)))$coef[2,]
+exp(os2$coef[2,1])
+```
