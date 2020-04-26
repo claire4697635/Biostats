@@ -1,0 +1,108 @@
+---
+title: 'QBS 121 Assignment 8: Survival Analysis'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+## 1 Problem
+1.
+
+Let $f_Y(t)$ be the probability density function, $S_Y(t)$ be the survival function, then the hazard function is defined as $h_Y(t)=\frac{f_Y(t)}{S_Y(t)}$. We also know that $h_Y(t) \sim \lambda_(t)$.
+
+Now $h_1(t) \sim \lambda_1(t)$, and $h_0(t) \sim \lambda_0(t)$. We then can get $S_1(t) \sim \frac{1}{h_1(t)} \sim \frac{1}{ \lambda_1(t)}$. Similarly, $S_0(t) \sim \frac{1}{ \lambda_0(t)}$.
+
+As $\lambda_1(t) < \lambda_0(t)$ for $t < \tau$, then $S_1(t)>S_0(t)$ for $t < \tau$.
+
+2. 
+As we move forward to solve for $S_Y(t)$, it equals $exp[-H_Y(t)]$, where $H_Y(y)=\int h_Y(t)dt = h+constant$ is called the cumulative hazard function. So $S_Y(t)=exp[-(h+costant)]$. 
+
+Now, even if $\lambda_1(\tau) = \lambda_0(\tau)$ at $t=\tau$, $S_1(\tau)$ cannot immediately equals $S_0(\tau)$, because the integral of $h_Y(t)$ has a constant term, so that the constant term "delays" the moment when $\int h_1(t)dt = \int h_2(t)dt$. Therefore, when $S_1(t_x)>S_0(t_x)$, $t_x$ is some time after $\tau$.
+
+
+
+
+## 2 Data Analyses
+
+### 2.1 PBC
+
+#### 1.
+1 for transplant, 2 for death.
+```{r}
+library(survival)
+help(pbc)
+names(pbc)
+```
+
+(a): It would be recorded as 2 - death. Because status indicates a lasting status, so that even someone had a transplant, if the individual died after, the individual's status is "dead". 
+
+(b)-(c)
+```{r}
+library(cmprsk)
+(o <- with(pbc,cuminc(time,status)))
+plot(o)
+```
+It plots the kaplan-Meier curves for cumulative incidence of transplant status(solid line) and death status(dashed line). As we can see, the curve of individuals who encountered death increases faster than individuals who received the transplant. It could be treated as the reversed version of survival curve. It means that during each time interval, the new death cases are more than the transplant cases.
+
+
+#### 2.
+
+(a)
+```{r}
+library(survival)
+pbc$tr.death <-  pbc$status>0
+pbc.new <- pbc[1:312,] # to remove all the NA's under pbc$trt
+```
+
+(b)
+```{r}
+
+# for treatment = 1
+trt1 <- (pbc.new[pbc.new$trt==1,])
+trt1.true <- trt1[trt1$tr.death==TRUE,]
+(num.event.1 <- length(trt1.true$id))
+(rate.event.1 <- length(trt1.true$id)/length(trt1$id))
+
+# for treatment = 2
+trt2 <- pbc.new[pbc.new$trt==2,]
+trt2.true <- trt2[trt2$tr.death==TRUE,]
+(num.event.2 <- length(trt2.true$id))
+(rate.event.2 <- length(trt2.true$id)/length(trt2$id))
+```
+
+
+(c)
+```{r}
+par(mfrow=c(1,2)) 
+# survival curve under different treatments
+plot(survfit(Surv(time, tr.death) ~ trt, data=pbc), mark.time=TRUE, main = "Survival curve considering trt",col=c("blue","red"))
+legend("topright", legend=c("D-penicillmain", "placebo"),fill=c("blue","red"),bty="n")
+
+# survival curve without considering trt
+plot(survfit(Surv(pbc$time, pbc$tr.death) ~ 1), mark.time=TRUE, main = "Survival curve without considering trt")
+
+```
+
+(d): Log Rank Test Statistic
+```{r}
+survdiff(Surv(time, tr.death) ~ trt, data=pbc)
+```
+
+(e) Wilcoxon Rank Sum for censored data (Peto-Peto-Prentice)
+```{r}
+survdiff(Surv(time, tr.death) ~ trt, data=pbc, rho=1)
+```
+
+(f)
+```{r}
+summary(coxph(Surv(time, tr.death) ~ trt, data=pbc))
+```
+
+As a result, we can see that trt ultimately will not have an impact on the composite endpoints. The estimated coefficients are considered separately within trt=1 and trt=2, in survival curve, log-rank test, peto-peto-prentice test. But at the end, when we are looking at the the hazard ratio obtained from the cox's model, as it is 0.9436 which is close to 1, it means the treatment barely has impact on the survival. Because the hazard ratio estimates the ratio in the treated(trt=1) versus controled(trt=2) group, so if the ratio is close to 1, it means the result from the two groups are similar.
