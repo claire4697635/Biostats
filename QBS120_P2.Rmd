@@ -1,0 +1,226 @@
+---
+title: "QBS120_problemset2"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+Author: Claire Wang
+---
+
+title: "QBS120_problemset2"
+Author: Claire Wang
+
+
+Problem 1 (Based on Rice 3.18):
+A. the region here is $y \leqslant x$, with $0 \leqslant x \leqslant 1$
+
+```{r}
+plot(1,1, col = "white", xlab = "x", ylab = "y", xlim = c(0,1), ylim = c(0,1))   # Draw empty plot
+polygon(x = c(0, 1,1), y = c(0,0, 1), col = "blue", border = NA) # the blue region which shows the limits of the integration where the joint denity function is positive
+```
+
+B. find k:
+$f(x)=\begin{cases} kxy, 0 \leqslant y \leqslant x \leqslant 1\\0,otherwise\end{cases}$
+
+$\int_{0}^{1} \int_{0}^{x} kxy\ dydx = 1$
+
+$k\int_{0}^{1} [\frac{y^2}{2}] \Big|_0^x\ x\ dx = 1$
+
+$k\int_{0}^{1} \frac{1}{2} x^3 dx = 1$
+
+$k[\frac{x^4}{8}] \Big|_0^1\ = 1$
+
+$\frac{k}{8} = 1$
+
+$k=8$
+            
+C. find the marginal densities of X and Y:
+
+Marginal density of y:
+$f_Y = \int_{y}^{1} 8xy dx = 8 [\frac{1}{2}x^2] \Big|_y^1 y$
+
+$f_Y= 4y(1-y^2)$
+
+Marginal density of x:
+$f_X = \int_{0}^{x} 8xy dy = 8 [\frac{1}{2}y^2] \Big|_0^x x$
+
+$f_X= 4x^3$
+
+D. find the conditional densities of Y given X and X given Y:
+$f_{Y|X}(y|x) =  \frac{f_{X,Y}(x,y)}{f_X (x)}$
+
+$= \frac{8xy}{4x^3} = \frac{2y}{x^2}$
+
+$f_{X|Y}(x|y) =  \frac{f_{X,Y}(x,y)}{f_Y (y)}$
+
+$= \frac{8xy}{4y(1-y^2)} = \frac{2x}{1-y^2}$
+
+
+
+
+
+
+
+
+Problem 2 (Based on Rice 3.20):
+rephrase: $f_{X_1}$ is a uniform density function with  $x_1 \in [0,1]$, 
+          $f_{X_2|{X_1}}$ is a uniform density function with $x_2 \in [x_1, 1]$
+          
+given that $f_{X_1} = \begin{cases} 1, 0 \leqslant x_1  \leqslant 1 \\0, otherwise\end{cases}$
+
+and $f_{X_2|{X_1}} = \begin{cases} \frac{1}{1-x_1}, x_1 \leqslant x_2  \leqslant 1 \\0, otherwis\end{cases}$
+
+the joint distribution is:
+
+$f_{X_1,X_2}(x_1,x_2) = f_{X_1} \times f_{X_2|X_1} = 1 \times \frac{1}{1-x_1}$ with $x_1 \in [0,1]$ 
+
+and $x_2 \in [x_1, 1]$
+
+the marginal distribution of $X_1$ is given as above.
+the marginal distribution of $X_2$ is:
+
+then $f_{X_2} = \int_{0}^{x_2} f_{X_1,X_2} (x_1,x_2) dx_1$
+
+$f_{X_2} = \int_{0}^{x_2} \frac{1}{1-x_1}dx_1=- [\ln(|x_1-1|)]\Big|_0^{x_2} = - [\ln(|x_2-1|)]$
+with $0 \leqslant x_1 \leqslant x_2 \leqslant 1$
+
+
+$f_{X_2}= \begin{cases} - [\ln(|x_2-1|)] , 0\leqslant x_1 \leqslant x_2 \leqslant 1 \\0, otherwise \end{cases}$
+
+
+
+
+
+
+
+
+Problem 4 (Based on Rice 3.71):
+Since $X_1$, $X_2$,..., $X_n$ all have the same density function,
+$f_{X_i}(x_i) = f_X(x)$
+Given $P(x > \alpha) = \gamma$, find $P(x_1 \leqslant \alpha)$, which is $F_{X_{(1)}}(\alpha)$
+
+now we know $P(x \leqslant \alpha) = F_X(\alpha) = 1 - \gamma$
+
+Given that $F_{X_(n)}(x) = \max\{X_1,X_2,...,X_n\} = [F_X(X)]^n$
+
+and $F_{X_(1)}(x) = \min\{X1,X_2,...,X_n\} = 1-[1-F_X(x)]^n$
+      
+We have $F_{X_{(1)}}(\alpha) = 1 - [1 - F_X(\alpha)]^n = 1 - [1 - (1-\gamma)]^n = 1 - \gamma^n$
+
+
+
+
+
+
+
+
+Problem 5 (Based on Rice 4.31):
+$f_X = \begin{cases} \frac{1}{2}, 1 \leqslant x \leqslant 3 \\0, otherwise\end{cases}$
+
+$E(\frac{1}{X}) = \int_{1}^{3} \frac{1}{2} \frac{1}{x} dx = \frac{1}{2} [\ln(x)]\Big|_1^3 = \frac{1}{2} \log(3)$
+
+$E(X) = \int_{1}^{3} \frac{1}{2}x dx = [\frac{1}{4} x^2]\Big|_1^3 = 2$
+
+Therefore,
+
+$E(\frac{1}{X}) \neq \frac{1}{E(X)}$
+
+
+
+
+Problem 6 (Based on Rice 4.49):
+A.
+$E(Z) = E(\alpha X + (1-\alpha)Y) = \alpha E(X) + (1-\alpha)E(Y) = \alpha \mu + (1 - \alpha) \mu = \mu$
+
+B.
+$Var(Z) = Var(\alpha X + (1-\alpha)Y) = \alpha ^2 Var(X) + (1- \alpha)^2 Var(Y) = \alpha ^2 \sigma_x^2 + (1-\alpha)^2 \sigma_y^2$
+here, $\sigma_x^2$ and $\sigma_y^2$ are constont, so differentiate $Var(Z)$ and set it to equal zero to find the $\alpha$ that minimize $Var(x)$
+$[Var(Z)]' = 2\alpha \sigma_x^2 - 2(1- \alpha)\sigma_y^2 = 0$
+$\alpha(\sigma_x^2 + \alpha_y^2) - \sigma_y^2 = 0$
+$\alpha = \frac{\sigma_y^2 }{\sigma_x^2 + \sigma_y^2}$
+
+
+C.
+if use $Z = \frac{X+Y}{2}$:
+$Var(Z) = Var(\frac{X+Y}{2}) = \frac{1}{4}Var(X) + \frac{1}{4}Var(Y) = \frac{1}{4}\sigma_x^2 + \frac{1}{4} \sigma_y^2$
+now,
+if $Var(\frac{X+Y}{2}) < Var(X)$, $\frac{1}{4}\sigma_x^2 + \frac{1}{4} \sigma_y^2 < \sigma_x^2$, then $\sigma_y^2 < 3\sigma_x^2$
+similarly, $Var(\frac{X+Y}{2}) < Var(Y)$, $\frac{1}{4}\sigma_x^2 + \frac{1}{4} \sigma_y^2 < \sigma_y^2$, then $\sigma_x^2 < 3\sigma_y^2$
+therefore, 
+$\ \frac{1}{3} < \frac{\sigma_x^2}{\sigma^y_2} < 3$
+
+
+
+
+
+
+
+Problem 7 (Based on Rice 5.57):
+$X: \mu_x, \sigma_x$
+$Y: \mu_y, \sigma_y$
+if X and Y are independent RVs,
+$E[XY] = E(X)E(Y) = \mu_x \mu_y$
+$Var[XY] = E[(XY)^2] - (E[XY])^2 = E(X^2)E(Y^2) - \mu_x^2 \mu_y^2$
+since $E(X^2) = Var(X)+[E(X)]^2 = \sigma_x^2 + \mu_x^2$
+$Var[XY]= (\sigma_x^2 + \mu_x^2)(\sigma_y^2 + \mu_y^2)- \mu_x^2 \mu_y^2$
+
+
+
+
+Problem 8 
+A. The joint empirical distribution of the first two genes in the Golub data set
+```{r}
+library(multtest)
+library(ggpubr)
+data("golub")
+#View(golub)
+golubb <- as.data.frame(golub)
+gene <- t(golubb[1:2,])
+gene1 <- as.data.frame(gene)
+golub.clx <- as.data.frame(golub.cl)
+gene1_golub <- cbind(gene1,golub.clx)
+colnames(gene1_golub)[1] <- "gene1"
+colnames(gene1_golub)[2] <- "gene2"
+gene1_golub$ALL_or_AML <- gene1_golub$golub.cl
+for (n in 1:38){
+  if (gene1_golub[n,3] == "0"){
+    gene1_golub[n,4] <- "ALL"
+  }
+  else{
+    gene1_golub[n,4] <- "AML"
+  }
+}
+ggscatter(gene1_golub, "gene1", "gene2", color = "ALL_or_AML",palette = c("purple","yellow"))
+
+```
+
+
+
+B.
+Since the two genes are positively correlated to each other, they are dependent.
+
+C.
+```{r}
+plot(density(gene1_golub$gene1))
+hist(gene1_golub$gene1)
+plot(density(gene1_golub$gene2))
+hist(gene1_golub$gene2)
+```
+
+
+
+D.
+they are continuous RV's based on the (multi-modal) distribution plots.
+
+
+E.
+```{r}
+# create two sets of 100 random variables and select their mean and standard deviation parameters.
+random1 <-rnorm(n = 100, mean(gene1_golub$gene1),sd(gene1_golub$gene1))
+random2 <- rnorm(n = 100, mean(gene1_golub$gene2),sd(gene1_golub$gene2))
+plot(random1, random2)
+#cor(random1, random2)
+cor.test(random1,random2)
+```
+Observing from the scatter plot, the two independent genes we create have no correlation. Also, the p-value is way higher than 0.05, therefore is not statistically significant.
+
