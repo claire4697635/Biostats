@@ -1,0 +1,236 @@
+---
+title: "QBS121_HW1"
+output: html_document
+---
+
+
+QBS 121, Winter 2020: Assignment  on Linear Models Part I
+
+Author: Claire Wang
+
+1 Problems:
+
+1) Determine how translating and rescaling a predictor, $X_i$ in a linear model, $Y=b_0+b_1X_1+\cdots+b_kX_k+\epsilon$ effects the coefficient, $b_i$. That is, how do the coefficients change if one regresses on $X_i^{\prime}=r+sX_i$ instead? If you find the math abstract, try it in practice (e.g. using lm()). List at least one motivations for rescaling a variable.
+
+
+Answer:
+
+Only shifting(translating) the regressor will not change the slope but the intercept ($b_0$): r = r, s = 1.
+
+$Y = b_0 + b_1 X_1 + b_2X_2 +...+b_kX_k +\epsilon = b_0 + b_1(r + X_1) + b_2(r+X_2) +...+ b_k(r+X_k) - r(b_1+b_2+...+b_k) +\epsilon$,
+
+$Y = [b_0- r(b_1+b_2+...+b_k)] + b_1(r + X_1) + b_2(r+X_2) +...+ b_k(r+X_k) +\epsilon = b_0' + b_1X_1' + b_2X_2' +...+ b_kX_k' +\epsilon$
+
+
+Similarly, only rescaling the 4egersor will change the slope but not the intercept: r = 0, s = s.
+
+$Y = b_0 + b_1 X_1 + b_2X_2 +...+b_kX_k +\epsilon = b_0 + (b_1/s)(s X_1) + (b_2/s)(sX_2) +...+(b_k/s)(sX_k) +\epsilon$,
+
+$Y =  b_0 + b_1'(X_1') + b_2'X_2' +...+'b_k'X_k' +\epsilon$
+
+We choose to rescale a variable when: it has a large scale (to simplify calculations and notations); when try to sum or average variables that have differen scales so one variable with a very large scale will affect the sum/avg due to its scale.
+
+
+2) Let ${\hat \epsilon}_i = Y_i - ({\hat a}+ {\hat b}X_i)$ be the residuals resulting from a least squares regression of $Y$ on $X$. Sketch a proof that the sum of the residuals is zero and that $\sum {\hat \epsilon}_i x_i = 0$ (e.g. the independent variable and estimated residual are not ``correlated'').
+
+Answer:
+Start with minimize the sum of the squared distances between the observed and fitted values, with respect to a and b:
+$$\sum [y_i - (\hat a+ \hat bx_i)]^2$$
+We need only consider partial derivative wrt a:
+
+$\frac{\partial}{\partial \hat a} \sum (y_i - (\hat a+ \hat b x_i))^2 = 0$, then $-2 \sum (y_i - (\hat a+\hat bx_i)) = -2 \sum \hat \epsilon_i =0$
+
+therefore, $\sum \epsilon_i =0$
+
+Also, $\sum \hat \epsilon_i = n \bar{\hat \epsilon} = 0$, therefore $\bar{\hat \epsilon} = 0$
+
+So, $\sum \hat \epsilon x_i = \bar{\hat \epsilon} \sum x_i = 0$.
+
+
+3) Suppose the number of covariates (independent variables) in your data set is equal to or more than the sample size minus one. How well can you fit the data? If you want to avoid the math try some examples in R with lm().
+```{r}
+fitmodel <- function(n, k) {
+  # n: sample size
+  # k: number of predictors
+  # return linear model fit for given sample size and k predictors
+  x <- data.frame(matrix( rnorm(n*k), nrow=n))
+  names(x) <- paste("x", seq(k), sep="")
+  x$y <- rnorm(n)  
+  summary(lm(y~., data=x))
+  
+}
+fitmodel(100,99)
+```
+Set $n = 100$, try $k = 98, 99, 100$, etc. When $k \geq (n-1))$, the standard errors, t-vaues, and p-value are not available for the estimated intercept and estimated coefficients. We run into issues in parameter estimation if  the number of covariates (independent variables) in dataset is equal to or more than the sample size minus one. In tihs case, it is not possible to estimate the fit of the overall model.
+
+
+2 Data Analyses
+
+2.1 Analysis of the npk dataset on agricultural yield
+
+This is a dataset from agriculture for which alot of statistical methodology was developed 80 years ago.  The data npk is part of base R. The dependent variable is ${\it yield}$. There are three exposures of interest, each binary, ${\it N, P}$ and ${\it K}$, in addition to a variable called block.
+
+
+1) Comment on the distribution of yield.
+```{r}
+?npk
+data(npk)
+summary(npk)
+plot(density(npk$yield))
+```
+The distribution of Yield is approximately normal.
+
+2) Regress yield on N, P and K, one at a time (univariable models). 
+```{r}
+str(npk)
+(yield_on_N <- lm(as.numeric(npk$yield) ~ npk$N))
+(yield_on_P <- lm(as.numeric(npk$yield) ~ npk$P))
+(yield_on_K <- lm(as.numeric(npk$yield) ~ npk$K))
+
+```
+3) Use a t-test to compare yield between observations in which N=1 (nitrogen present) and N=0). Compare this result to the regression of yield on N above.
+
+```{r}
+Yield_N0 <- npk$yield[npk$N==0]
+Yield_N1 <- npk$yield[npk$N==1]
+t.test(Yield_N0, Yield_N1)
+summary(yield_on_N)
+```
+When we use the t-test to compare yield breaking down by N=0 and N=1, the results (ex: t-values, estimate, p-values) are different from the regression of yield on N. Noted that mean of Yield when N=0 is similar to the estimated yield regressed on N. So yield is associated with different N (0 or 1).
+
+
+
+4) Run a multivariable model of yield on the main effects, N, P and K. Interpret the coefficients.
+```{r}
+summary(o <- lm(npk$yield ~ npk$N + npk$P + npk$K))
+```
+Assume $yield = a + \beta_1 N + \beta_2 P + \beta_3 K + \epsilon$
+
+then $a = 54.650$, $\beta_1 = 5.617$, $\beta_2 = -1.183$, and $\beta_3 = -3.983$
+
+
+2.2 Simulate and Analyze
+
+Create a dataset that simulates a two-arm parallel randomized controlled trial with before and after intervention measurements of a continuous endpoint as follows: 
+
+1) Choose a sample size, say $n=400$. 
+2) Generate a baseline version of the endpoint $Y_0$ that has a standard deviation of 10.
+3) Let $X$ be a binary variable indicating randomization to treatment or not (with 50-50 frequency). 
+4) Generate a post-intervention version of the endpont, $Y_1$ that has a correlation of $\rho=0.7$ with $Y_0$. This can be done using $Y_1=\rho Y_0+\sqrt{1-\rho^2}N(0,\sigma)+\beta X$ where $\sigma=5$ is the standard deviation of $Y_0$ and $\beta$ is treatment effect. Try $\beta=0.3$.
+5) Verify that the Pearson correlation between the baseline and post-baseline versions is approximately 0.7.
+```{r}
+n <- 500
+Y_0 <- rnorm(n, sd=10)
+X <-  runif(n) < 0.5
+Y_1 <- 0.7 * Y_0 + sqrt(1-0.7^2)* rnorm(n, mean=0, sd=10) + 0.3 * X
+#tapply(Y_1,Y_0,mean)
+cor(Y_0, Y_1, method = "pearson")
+lm(Y_1 ~ Y_0)
+```
+Here we verify that the Pearson correlation between $Y_1$ and $Y_0$ is approx 0.7 by lm(). 
+
+
+
+Now analyze the data.
+
+
+1) Test if the post-intervention endpoint  ($Y_1$) is different between the two arms (i.e. the two levels of $X$).
+```{r}
+Y1_X0 <- Y_1[X==0]
+Y1_X1 <- Y_1[X==1]
+t.test(Y1_X1, Y1_X0)
+
+#length(Y_1[X==0])
+#length(Y_1[X==1])
+
+summary(lm(Y_1~X))
+```
+We see that sample estimate mean of $Y_1$ with $X=1$ is different from mean of $Y_1$ with $X=0$. But the p-value is greate than 0.05. Therefore, we cannot say the post-intervention endpoint has a statistically significant different between the two arms.
+
+
+2) Test if the change from baseline ($Y_1-Y_0$) is different between the two arms.
+```{r}
+Y1_Y0 <- Y_1 - Y_0
+Y1_Y0_X0 <- Y1_Y0[X==0]
+Y1_Y0_X1 <- Y1_Y0[X==1]
+
+t.test(Y1_Y0_X1, Y1_Y0_X0)
+
+summary(lm((Y_1 - Y_0)~X))
+```
+Similarly, we see that sample estimate mean of change with $X=1$ is different from mean of change with $X=0$. But the p-value is greate than 0.05. Therefore, we cannot say the post-intervention endpoint has a statistically significant different between the two arms.
+
+
+3) Compare the change from baseline ($Y_1-Y_0$) between the two arms {\it controlling} for the baseline value, $Y_0$.
+```{r}
+summary(lm((Y_1 - Y_0)~X+Y_0))
+```
+After controlling for $Y_0$, the change from baseline $Y_1 - Y_0$ has a statistically significant difference between the two arms, according to that the p-value here is smaller than 0.05.
+
+
+4) Compare the post-intervention endpoint ($Y_1$)  between the two arms {\it controlling} for the baseline value, $Y_0$.
+```{r}
+summary(lm(Y_1 ~X+Y_0))
+```
+Similarly, after controlling for $Y_0$, the post-intervention endpoint $Y_1$ has a statistically significant difference between the two arms, according to that the p-value here is smaller than 0.05.
+
+5) Compare and commment on the last two adjusted analyses.
+Answer: the coefficient of $Y_0$ from 3) is negative, while the coefficient of $Y_0$ from 4) is positive. 
+It means that a one-unit shift of $Y_0$ from 3) would negatively change the $Y_1 - Y_0$ by the value of the coefficient while holding other variables in the model constant; a one-unit shift of $Y_0$ from 4) would positively change the $Y_1 - Y_0$ by the value of the coefficient while holding other variables in the model constant.
+
+
+3 Simulations
+
+Run the code below and comment on the arguments to the Sim function and guess at what it is tryng to illustrate.
+
+
+```{r}
+Sim <- function(n, beta, rfunc=rnorm, R=10^4) {
+  N <- 2*n
+  qt.975 <- qt(0.975, df=N-2)
+  beta.est <- p.v <- rep(NA, R)
+  CI <- matrix(nrow=R, ncol=2)
+  for (r in 1:R) {
+    X <- rep(0:1, each=n)
+    noise <- rfunc(N)
+    Y <- beta * X + noise
+    os <- summary(lm(Y ~ X))
+    beta.est[r] <- os$coef[2,1]
+    CI[r,] <- os$coef[2,1] + os$coef[2,2] * qt.975 * c(-1,+1)
+    p.v[r] <- os$coef["X", "Pr(>|t|)"]
+  }
+
+  mn <- mean(beta.est)
+  cover <- mean(CI[,1]<beta & beta < CI[,2])
+  emp.type1err <- mean(p.v < 0.05)
+  par(mfrow=c(1,2))
+  hist(beta.est)
+  hist(p.v)
+  c(average=mn, coverage=cover, emp.type1err=emp.type1err)
+ #CI
+  }
+Sim(n=20, beta=0, rfunc=rnorm)
+Sim(n=20, beta=0, rfunc=rexp)
+Sim(n=20, beta=0.5, rfunc=rnorm)
+Sim(n=20, beta=0.5, rfunc=rexp)
+Sim(n=50, beta=0, rfunc=rnorm)
+Sim(n=50, beta=0, rfunc=rexp)
+Sim(n=50, beta=0.5, rfunc=rnorm)
+Sim(n=50, beta=0.5, rfunc=rexp)
+
+```
+Create a binary random variable X which contains n 0's and n 1's and simulate X 10000 times. Define the linear relationship between X and Y, where the noise is determined by rfunc. Then: 
+
+1. Obtain the average estimated of 10000 beta values, $\bar{\hat \beta}$.
+
+2. By showing "cover", we are trying to visualize what proportion of the 10000 number of 95% confidence intervals include the given beta $\beta$. Here, if mean(number of TRUE conditions) is greater, more TRUE conditions exists. 
+Specifically, mean(number of TRUE conditions)=0 means no TRUE condition, and mean(number of TRUE conditions)=1 means all conditions are TRUE. 
+Specifically, TRUE condition here is that if lower end of CI is smaller than $\beta$ and upper end of CI is larger than $\beta$.
+
+3. Obtain average p-values which are smaller than 0.05.
+
+4. A histogram of all $\beta$ estimates.
+
+5. A histogram of all p-value estimates.
+
+The sim function is trying to present the estimated $\beta$ according to linear model of Y and X, given different sample size, $\beta$, and noise; obtain the average of estimated $\beta$ values and p-values of each simulation; confirm how many of the 10000 95% confidence intervals have the given $\beta$; visualize the estimated $\beta$ values and p-values for each simulation. 
