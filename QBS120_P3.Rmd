@@ -1,0 +1,292 @@
+---
+title: "QBS120_P3"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+QBS 120 HW 3
+
+Author: Claire Wang
+
+Corrections will be written in the ** **. 
+
+
+
+Problem 1 (Based on Rice 4.54):
+
+(a) Find Cov(U,V) and $\rho_{U,V}$
+
+Given $U = Z - X$ and $V = Z - Y$,
+      $Var(X) = \sigma_X^2$, $Var(Y) = \sigma_Y^2$,  $Var(Z) = \sigma_Z^2$
+
+$Cov(Z-X, Z-Y) = Cov(Z,Z-Y) + Cov(-X, Z-Y) = Cov(Z-Y,Z) + Cov(Z-Y,-X)$
+$Cov(Z-X, Z-Y) = Cov(Z,Z) + Cov(-Y,Z) + Cov(Z,-X) + Cov(-Y,-X)$
+
+since X, Y, and Z are independent RVs,
+$Cov(U,V) = Cov(Z-X, Z-Y) = Cov(Z,Z) = Var(Z)$
+
+Similarly, $\rho_{U,V} = \frac{Cov(Z-X, Z-Y)}{\sqrt{Var(Z-X) Var(Z-Y)}} = \frac{Var(Z)}{\sqrt{[Var(Z)+Var(X)-2\times1\times1\times Cov(Z,-X)]\times[Var(Z)+Var(Y)-2\times1\times1\times Cov(Z,-Y)]}}$
+
+then $\rho_{U,V}=\frac{\sigma_Z^2}{\sqrt{(\sigma_Z^2 + \sigma_X^2)(\sigma_Z^2+\sigma_Y^2)}}$
+
+
+(b) Do things change?
+
+No change. For $Cov(U,V)$, No matter its$Z+X$ and $Z+Y$ or $Z-X$ and $Z-Y$, Covariance of two different independent RVs will be eliminated. Therefore $Cov(U,V) = Var(X)$ here still.
+
+$\rho_{U,V}$ will not change due to the same reason above.
+
+
+
+(c) $\sigma_Z^2$ much larger than the other two?
+
+$\rho_{U,V}=\frac{\sigma_Z^2}{\sqrt{(\sigma_Z^2 + \sigma_X^2)(\sigma_Z^2+\sigma_Y^2)}} \sim\frac{\sigma_Z^2}{\sqrt{(\sigma_Z^2 )(\sigma_Z^2)}} \sim 1$
+
+therefore $\rho_{U,V}$ converges to 1
+
+**he correlation will be dominated by Z.**
+
+(d) $\sigma_Z^2$ much smaller than the other two?
+
+$\rho_{U,V}$ converges to $\frac{\sigma_Z^2}{\sqrt{\sigma_X^2 \sigma_Y^2}} \sim 0$
+
+
+(e):
+generally, the formula for calculating the correlation coefficient standardizes the variable, and changes in scale or units of measurement will not affect its value. （quote from online
+However, if the standard deviation of z becomes way larger and smaller than sd of x and y as shown in (c) and (d) above, in other words, if the dispersion of z is relatively too larger or smaller than the dispersion of x and y, Cor(U,V) here will be affected.
+
+**The standardization of variables prior to statistical analysis (e.g., predictors in a regression model) ismotivated by similar logic, i.e., to prevent variables with large variances from dominating the solution. **
+
+Problem 2 (Based on Rice 4.64):
+
+(a):
+$Cov(\bar{X}, \bar{Y}) = E[\bar{X}\bar{Y}] - E[\bar{X}]E[\bar{Y}] = E[\frac{X-\mu_X}{\sqrt{\sigma_X^2}} \frac{Y-\mu_Y}{\sqrt{\sigma_Y^2}}] - E[\frac{X-\mu_X}{\sqrt{\sigma_X^2}}] E[\frac{Y-\mu_Y}{\sqrt{\sigma_Y^2}}]$
+
+$Cov(\bar{X}, \bar{Y})= \frac{1}{\sqrt{\sigma_X^2 \sigma_Y^2}} E[(X-\mu_X)(Y-\mu_Y)] - \frac{1}{\sqrt{\sigma_X^2 \sigma_Y^2}}E[X-\mu_X]E[Y-\mu_Y]$
+
+$= \frac{1}{\sqrt{\sigma_X^2 \sigma_Y^2}} [E[XY-\mu_y X - \mu_X Y + \mu_X \mu_Y] - (E[X] - \mu_X)(E[Y] - \mu_Y)]$
+
+$= \frac{1}{\sqrt{\sigma_X^2 \sigma_Y^2}} [E[XY] - E[X]E[Y]] = \rho_{X,Y}$
+
+therefore $Cov(\bar{X}, \bar{Y}) = \rho_{X,Y}$
+
+
+
+(b):
+```{r}
+?prcomp()
+# set a 4 x 4 matrix
+V1 <- c(5,10,15,20)
+V2 <- seq(7:10)
+V3 <- c(6,11,9,28)
+V4 <- c(38:35)
+matrix <- cbind(V1,V2,V3,V4)
+covariance <-cov(matrix)
+
+#PCA: eigenvalue decomposition of the sample covariance matrix
+prcomp(covariance, scale = T, center = F)
+# tried scale = T or F and center = T or F, noted that the defalt is scale = F while center = T.
+
+# if center = T, the variables will be shifted to be zero centered.
+# if scale = T, the variables are scaled to have unit variance be fore the analysis takes place
+
+# we set scale = T and center = T when we want to get a scaled pca on the data matrix 
+# which centers at 0, especially when we don't have the scaling done before doing pca. 
+
+# it is good to scale the data in most cases, otherwise the magnitude to the variables 
+# dominates the associations between the variables. Unless all the variables are previously 
+# recorded in the same scale, it is better to normalize (scale) the data. For example, 
+# do pca on a gene matrix.
+
+# similarly, better not to have the uncentered matrix data.
+```
+
+
+Problem 3 (Based on Rice 4.74):
+
+(a) expected number of offspring in the third generation:
+Let $E[Generation 1] = E[G_1] = \mu$
+and $Var[G_1] = \sigma^2$
+
+$E[G_2|G_1] = G_1 \mu$, $G_1$ is the population of the first generation
+$E[G_3 | G_2] = G_2 \mu$
+
+the second generation is: $E[E[G_2|G_1]] = E[G_2] = E[G_1 \mu] = \mu E[G_1] = \mu^2$
+and the third generation is: $E[E[G_3|G_2]] = E[G_3] = E[G_2 \mu] = \mu E[G_2] = \mu^3$
+
+** $E[T3] = \mu^2$  **
+
+(b) ariance of the number of offspring in the third generation:
+
+$Var[G_1] = \sigma^2$, 
+
+$Var[G_2|G_1] = G_1 \sigma^2$
+
+$Var[G_3|G_2] = G_2 \sigma^2$
+
+the second generation is: $E[Var[G_2|G_1]] = Var[G_2] = Var[G_1 \sigma^2] = \sigma^2 E[G_1] = \sigma^2 \mu$
+and the third generation is: $E[Var[G_3|G_2]] = Var[G_3] = Var[G_2 \sigma^2] = \sigma^2 E[G_2] = \sigma^2 \mu^2$
+
+**$Var(T3) = \mu \sigma^2 (\mu +1)$**
+
+(c)
+```{r}
+
+# generate 1000 populations
+population <-matrix(0, 1000, 1)
+for (i in 1:nrow(population)){
+m=1
+while(m<1001){
+G2<-rpois(1,2) # set first generation with 1 person, plug the poisson distribution with lembda = 2 to the second generation and solve for # of people in G2
+G3<-rpois(G2,2) # the second generation has G2 people. Solve for G3 from each individual in G2
+G<-sum(G3) # add each G3 to get the overall G3 in per population (picture the population tree)
+population[i,1]<-G
+m=m+1
+}
+}
+
+hist(population[,1], main = "Number of offsprings in the third generation")
+
+mean(population)
+var(population)
+```
+
+
+Problem 5 (Based on Rice 5.1): need to edit
+
+given that:
+$E[X_i] = \mu$, and $Var(X_i) = \sigma_i$
+and $\frac{1}{n^2}[\sigma_1^2 + \sigma_2^2 + ... + \sigma_n^2] \to 0$
+
+so $Var(\bar{X_n}) = \frac{1}{n^2} \sum Var(X_i) = \frac{1}{n^2} (\sigma_1^2 + \sigma_2^2 + ...+ \sigma_n^2) \to 0$
+
+According to Chebyshev's inequality, 
+$P(| \bar{X_n} - \mu| > \epsilon) \leqslant \frac{Var(\bar{X_n})}{\epsilon^2}  \to 0$ since $Var(\bar{X_n}) \to 0$
+
+
+Problem 7 (Based on Rice 5.16):
+
+(a) approximate $P(S \leqslant10)$
+
+given $S = X_1 + X_2 +...+X_{20}$, $f(x) = 2x$ when $0 \leqslant x \leqslant 1$
+
+$E[X_i] = \int_{0}^{1} x f(x) dx = \int_{0}^{1} 2x^2 dx = \frac{2}{3}$
+
+$E[X_i]^2 = \int_{0}^{1}x^2 f(x)dx =\int_{0}^{1}2x^3 dx = \frac{1}{2}$
+$Var(X_i) = E[X^2] - E[X]^2 = \frac{1}{2} - (\frac{2}{3})^2 = \frac{1}{18}$
+
+According to CLT:
+$P(S \leqslant 10) \sim \lim_{n\to\infty} P(\frac{S_n}{\sqrt{n} \sigma} \leqslant x)$ for $x = {1,2,3,...,20}$
+
+then $P(S \leqslant 10) \sim P(\frac{S-\frac{40}{3}}{\sqrt{\frac{20}{18}}} \leqslant \frac{10-\frac{40}{3}}{\sqrt{\frac{20}{18}}}) = P(\frac{S-\frac{40}{3}}{\sqrt{\frac{20}{18}}} \leqslant -\sqrt{10})$ 
+
+$P(S \leqslant 10) \sim \phi(-\sqrt{10}) = 0.00079$
+
+
+(b):
+
+
+library(dplyr)
+
+x <- seq(0,20, length =1000)
+
+# mean = n times mu = 20*2/3 = 13.333, where n = 20
+# sd = sigma * sqrt(n) = sqrt(20/18) = 1.054
+y <- dnorm(x, mean=13.333, sd=1.054) # CLT-based density
+
+mati <- (runif(20000,0,1)/2)
+
+mati2 <- matrix(mati, byrow=TRUE, nrow=10000, ncol = 20 )
+mati2 <- as.data.frame(mati2)
+mati3 <- mati2 %>% 
+mutate(rowsums= rowSums(mati2))
+
+# plot true density
+plot(density(mati3$rowsums), ylim=c(0,0.8),xlim=c(0,20), main = "density of S")
+
+# plot CLT based density
+lines(x, y, type="l", lwd=1, col = 'blue')
+
+# they look off-shifted. It is because CLT is to approximate
+# large-sample-sized variables. Here we only have 20 variables.
+
+***
+```{r}
+
+ n = 10000
+sim.vals = matrix(sqrt(runif(n*20)), nrow=n)
+sum.vals = apply(sim.vals, 1, sum)
+plot(density(sum.vals), xlab="x", ylab="f(x)", xlim=c(0,20))
+x.vals = seq(from=0,to=20, by=0.01)
+points(x.vals, dnorm(x.vals, mean=40/3, sd=0.236*sqrt(20)), type="line", col="red")
+```
+
+
+***
+
+
+
+Problem 8 (Based on Rice 5.21):
+
+(a):
+
+$\hat{I}(f) = \frac{1}{n} \sum f(X_i)/ g(X_i)$ on $[a,b]$
+
+$E[\hat{I}(f)] = \int_{a}^{b} \hat{I}(f) g(X_i)dx = \int_{a}^{b} \frac{1}{n}\sum \frac{f(X_i)}{g(X_i)} g(X_i) dx = \int_{a}^{b} \frac{1}{n} \sum f(X_i) dx = \int_{a}^{b} f(x) dx = I(f)$
+
+
+(b):
+
+
+mean <- 0
+sd <- 1
+
+n <- seq(5,100) # generate an array of n so I can plot the n and i hat thing later
+for (m in n){
+   I_hat <- 0
+   for (i in 1:m){
+    fx <- dnorm(i, mean, sd)  # generate the density of standard normal           distribution for each n
+    gx <- 1 # generate the density of the standard uniform distribution for each n
+     I_hat <- fx / gx + I_hat # this is actually partial of I_hat without multiplied by 1/n which i will do it outside of this inner loop
+  }
+   I_hat <- (1/n) * I_hat
+}
+
+plot(n, I_hat, main = "I_hat as a function of n", xlab = "n", ylab = "I_hat")
+weighted.mean(I_hat)
+#E(I_hat) = 0.0097
+abline(h = 0.0097, col = 'purple')
+
+# now lets plot I(f)
+# integral
+
+x <- seq(0,1)
+f <- function(x) dnorm(x, mean=0, sd=1)
+I_f <- integrate(f, lower=0, upper=1)
+# I_f = 0.3413477
+abline(h= 0.3413477, col = 'pink')
+
+
+
+***
+```{r}
+(I_f = pnorm(1) - pnorm(0))
+
+n.vals = 5:100
+x.vals = runif(100)
+g.vals = rep(1,100) # U(0,1) density is 1 in region
+f.vals = dnorm(x.vals)
+I.est = rep(0, length(n.vals))
+for (i in 1:length(n.vals)) {
+  n = n.vals[i]
+  I.est[i] = mean(f.vals[1:n]/g.vals[1:n])
+  }
+I.est[1:10]
+
+```
+
+***
+
+
