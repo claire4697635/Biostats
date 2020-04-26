@@ -1,0 +1,72 @@
+---
+title: "QBS121_hw6"
+output: html_document
+---
+
+
+```{r}
+library(Matrix)
+library(lme4)
+library(nlme)
+library(car)
+library(MASS)
+library(geepack)
+```
+
+
+
+## Recall the linear mixed effect model:
+data description:
+For each of 9 intertidal areas (denoted ‘Beaches’), the researchers sampled five sites (denoted ‘Sites’) and at each site they measured abiotic variables and the diversity of macro-fauna (e.g. aquatic invertebrates). Here, species richness refers to the total number of species found at a given site while NAP ( i.e. Normal Amsterdams Peil) refers to the height of the sampling location relative to the mean sea level and represents a measure of the amount of food available for birds, etc. I choose id=site since I want to see if the relationship is clustered by geographic fact.
+```{r}
+rikz <- read.delim("https://uoftcoders.github.io/rcourse/data/rikz_data.txt")
+rikz$Beach <- as.factor(rikz$Beach)
+str(rikz)
+head(rikz)
+
+o.gee1 <- geeglm(Richness ~ NAP, data=rikz, id=Site, family = gaussian(link = "identity"))
+summary(o.gee1)
+
+# recall the lmer analysis
+library(lmerTest)
+o.lmer <- lmer(Richness ~ NAP + (1|Beach), rikz, REML = FALSE)
+summary(o.lmer)
+```
+Here we see that the coefficient of NAP is statistically significant due to its p-value less than 0.05. It indicates that the increase of one unit of NAP would decrease the richness of the species by 2.867 unit of length. Also, the number of clusters is 45, which is the total observations/measurements, and the maximum cluster size is 1. the cluster group I used should have been 5, according to the variable "Site" though. It might indicate that the clustered geeglm analysis is not as successful as predicted. 
+
+Compared to lmer result where we include the random effect "Beach", the estimated coefficients are pretty close in the two analyses, but the standard errors are different. P-values from geeglm are smaller than lmer.
+
+
+
+## Recall the GLMM analysis for binary mixed models:
+
+Lung cancer dataset description: A variety of outcomes were collected on patients, who are nested within doctors, who are in turn nested within hospitals. There are also a few doctor level variables, such as Experience that we will use in our example. 
+
+Here it is kinda tricky to pick the id vector. In homework 5 I treat Doctor ID "DID" as ramdon effect, and here I will treat Hospital ID, "HID", as cluster vector since the results may vary depending on the measurements from different hospitals. The reason that causes the clustered measurements could be due to instruments, regulations, faculty's trainings, etc.
+```{r}
+hdp <- read.csv("https://stats.idre.ucla.edu/stat/data/hdp.csv")
+hdp <- within(hdp, {
+  Married <- factor(Married, levels = 0:1, labels = c("no", "yes"))
+  DID <- factor(DID)
+  HID <- factor(HID)
+})
+
+head(hdp)
+
+o.gee2 <- geeglm(remission ~ Age + BMI + CancerStage + LengthofStay, data = hdp, id = HID, family = binomial(link=logit))
+summary(o.gee2)
+
+
+# recall the glmer analysis
+o.glmer <- glmer(remission ~ Age + BMI + CancerStage + LengthofStay +
+    (1 | DID), data = hdp, family = binomial(link=logit))
+summary(o.glmer)
+```
+The geeglm result shows that the p values for Age and BMI are not significant, meaning there is no strong association between Age and remission, as well as BMI and remission. The p values of cancer stages as well as length of stay are significant, which indicates the association between remission and cancer stages as well as length of stay in this experiment. Take cancer stage II for example, the increase of one unit of cancer stage II would decrease the remission by 0.27183 unit of length. Additionally, the number of clusters here is 35, which is just the number of hospitals we have, so it aligns with the id vector I used. The maximum cluster size is 377, indicating that the maximum number of measurements from a hospital is 377. By doing summary(hdp$HID) below, we found 377 in the 4th hospital and the result is proved to be concise.
+
+The results are overall consistent compared to the glmer analysis which includes the random effect "DID". The statistically significant coefficients are all negative in the two methods, just that the geeglm coefficients are slightly greater than glmer's. p-values from geeglm are mostly greater than glmer's.
+
+
+```{r}
+summary(hdp$HID)
+```
