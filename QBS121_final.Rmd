@@ -1,0 +1,229 @@
+---
+title: "QBS 121 Final"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## 1. Logistic Regression vs Probit Regression for Case Control Studies
+```{r}
+setwd("~/Documents/QBS 121")
+logistic <- function(x) {
+  1/(1+exp(-x))
+  }
+N <- 10^6
+# Situation: true model is logistic and estimation via logitistic regression
+X1 <- rnorm(N)
+X2 <- rnorm(N)
+Y <- runif(N) < logistic(-5 + 1*X1 + 2*X2) # True model
+(n.cases <- sum(Y)) # Cases
+Ctrls <- sample((1:N)[!Y], n.cases, replace=FALSE) # sample controls 1:1
+Subset <- c((1:N)[Y], Ctrls)
+
+# Entire population
+glm(Y ~ X1 + X2, family=binomial)$coef
+# Cases and sample of controls (e.g. a case-control study)
+glm(Y ~ X1 + X2, family=binomial, subset=Subset)$coef
+
+# Now if true model is probit and estimated using probit model
+X1 <- rnorm(N)
+X2 <- rnorm(N)
+Y <- runif(N) < pnorm(-5 + 1*X1 + 2*X2) # True model
+
+(n.cases <- sum(Y)) # Cases
+Ctrls <- sample((1:N)[!Y], n.cases, replace=FALSE) # sample controls 1:1
+Subset <- c((1:N)[Y], Ctrls)
+
+# Entire population
+glm(Y ~ X1 + X2, family=binomial(link="probit"))$coef
+# Cases and sample of controls (e.g. a case-control study)
+glm(Y ~ X1 + X2, family=binomial(link="probit"), subset=Subset)$coef
+
+```
+### If true model is logistic and estimation via logitistic regression:
+
+The number of cases is 41408, which is infrequent compared to a large sized population where N = 10^6. 
+The result from a logistic regression model shows that the estimated coefficients of X1 and X2 regarding the predicted outcome Y are 1.004735 and 2.005081 for the entire population, that is, without considering the case and control groups. And the intercept is -4.9891062. The results are close to the true model : logistic(-5 + 1*X1 + 2*X2), since the coefficients are closely aligned.
+
+The estimated coefficients X1 and X2 from a case-controled logistic regression model are 0.9870661 and 1.9981444. The results are different from the model with the total population. 
+
+### If true model is probit and estimation via probit regression:
+The number of cases is 20629, almost half of the case population compared to the logistic model, which is half less. 
+The result from the probit regression model shows that the estimated coefficients of X1 and X2 regarding the predicted outcome Y are 1.001010 and 2.011505  for the entire population, and the intercept is -5.015077. Again, the results are close to the true model, and even more, the results from the probit regression are closer to the true model compared to the coefficients from the logistic regression mode. 
+
+However, under the case-controlled study, the estimated coefficients(1.211724, 2.384853) are still somewhat close to the true model, which seems not to be affected by the case-control adjustment.
+
+In addition, the warning appears: glm.fit: fitted probabilities numerically 0 or 1 occurred. The warning indicates that the model is predicting absolute probabilities like 0 and 1, similar to the perfect fitting issue. In other words, the probit model is predicting the estimated coefficients for X1 and X2 very close to 1 and 2 from the given pnorm(-5 + 1*X1 + 2*X2) model. The reason it happens may be because that pnorm is generating a normally distributed model, and the probit regression model uses something called the cumulative distribution function of the standard normal distribution to define f(∗). So it's using a cumulative normal distribution function to predict a normal distributed model, so here comes the problem - perfect fitting. 
+
+
+## 2. Survival Analysis with Prediction Modeling and Treatment Comparison
+```{r}
+open.endovas <- read.csv("~/Documents/QBS 121/endo_vs_open.txt",sep="")
+sum(is.na(open.endovas))
+```
+
+#### (a) Plot survival curves by treatment group.
+```{r}
+library(survival)
+plot(survfit(Surv(Time, Status) ~ Treatment, data=open.endovas), mark.time=TRUE, col = c("blue","red"), main = "Survival curves by treatment group")
+legend("bottomleft", legend=c("Endovascula","Open Surgery"),fill=c("blue","red"),bty="n")
+```
+
+
+
+#### (b) Cox’s PH model. 
+```{r}
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf, data = open.endovas))
+```
+p-values for all the tests(likelihood, wald test, logrank) are significant, meaning the model is significant. Now the p-value for age, diabetes, copd, and chf are significant, so we can take a look at the HR's for the four covariates:
+
+The HR for age is 1.038, indicating almost no effect of age on survival, or the risk of death.
+
+The HR for diabetes is 1.298 controlling for other covaraites. It means having diabetes (diabetes=1) increase the hazard by 29.8%.
+
+The HR for copd is 1.463 controlling for other covaraites. It means having copd (copd=1) increase the hazard by 46.3%.
+
+The HR for copd is 1.423 controlling for other covaraites. It means having chf (chf=1) increase the hazard by 42.3%.
+
+
+#### (c) Report Harrell’s C-statistic.
+```{r}
+concordance(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf, data = open.endovas))$concordance
+
+# or
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf, data = open.endovas))$concordance
+```
+
+#### (d)
+```{r}
+# hazard ratio with 95% confidence interval:
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf + Treatment, data = open.endovas))$conf.int
+
+# p-value for treatment
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf + Treatment, data = open.endovas))$coef[7,5]
+```
+as we can see, the Hazard ratio for treatment controlling for other covariates is 0.9593, which is close to 1, it means almost no effect. So treatment barely has any influences on the prediction of survival.
+
+p-value for Likelihood,  Wald test, and logrank test are all less than 0.05, which means that the model is significant. Now the p-value for Treatment is 0.438, indicating a weak relationship between the patients receiving different treatment and decreased risk of death.
+
+
+
+#### (e) Test proportionality of hazards with respect to treatment.  *** may need to interpret result ***
+```{r}
+# Using Schoenfeld Residual approach
+os <- coxph(Surv(Time, Status) ~ Treatment, data=open.endovas)
+cox.zph(os)
+```
+The test is statistically significant for the treatment, and the global test is also statistically significant.
+
+
+#### (f):
+```{r}
+#quantile(open.endovas[open.endovas$Status==1,"Time"], c(0.33,0.67))
+Status.1 <- ifelse(open.endovas[,"Time"]<0.5, open.endovas$Status, 0)
+Status.2 <- ifelse(open.endovas[,"Time"]>=0.5 & open.endovas[,"Time"]<1, open.endovas$Status, 0)
+Status.3 <- ifelse(open.endovas[,"Time"]>=1, open.endovas$Status, 0)
+
+# < 0.5 years
+summary(os1 <- coxph(Surv(Time, Status.1) ~ age + male + diabetes + vascular + copd + chf + Treatment, data=open.endovas))$coef[,2:5]
+# 6 months to 1 year
+summary(os2 <- coxph(Surv(Time, Status.2) ~ age + male + diabetes + vascular + copd + chf + Treatment, data=open.endovas))$coef[,2:5]
+
+# > 1 yr
+summary(os3 <- coxph(Surv(Time, Status.3) ~ age + male + diabetes + vascular + copd + chf + Treatment, data=open.endovas))$coef[,2:5]
+```
+
+
+#### (g) a propensity score for treatment using age, sex and the comorbidities and second order terms :
+```{r}
+o <- glm(Treatment ~ (age + male + diabetes + vascular + copd + chf)^2, data=open.endovas, family="binomial")
+Propensity <- o$fit # propensity is the fitted model from the logistic model
+boxplot(split(Propensity,open.endovas$Treatment))
+```
+
+#### (h) inverse weighting
+```{r}
+open.endovas$Treatment <- as.numeric(open.endovas$Treatment) # Endovas = 1, Open = 2
+IWP<- ifelse(open.endovas$Treatment,1/Propensity, 1/(1 - Propensity)) 
+summary(glm(Treatment ~ (age + male + diabetes + vascular + copd + chf)^2, data=open.endovas, weight=IWP))$coef
+```
+
+#### (i)
+```{r}
+plot(survfit(Surv(Time, Status) ~ Treatment, data=open.endovas,weight=IWP), mark.time=TRUE, col = c("blue","red"), main = "Survival curves by treatment group, weighting by the IPW")
+legend("bottomleft", legend=c("Endovascula","Open Surgery"),fill=c("blue","red"),bty="n")
+
+```
+
+#### (j):
+```{r}
+# HR with confidence interval
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf, data = open.endovas, weight=IWP))$conf.int
+
+
+# p-value
+summary(coxph(Surv(Time, Status) ~age + male + diabetes + vascular + copd + chf, data = open.endovas, weight=IWP))$coef[,5]
+
+
+```
+
+
+## 3. Survival Analysis with a Treatment that Starts During Follow-up
+```{r}
+TDC1 <- read.csv("~/Documents/QBS 121/TDC1", sep="")
+TDC2 <- read.csv("~/Documents/QBS 121/TDC2", sep="")
+```
+
+#### 1.
+```{r}
+summary(coxph(Surv(Time, Event) ~ Treated, data=TDC1))$conf.int
+```
+
+
+#### 2.
+```{r}
+# p-value for treated
+summary(coxph(Surv(Time, Event) ~ Treated, data=TDC1))$coef[,5]
+```
+Since p-values for Treat as well as all three tests(likelihood ratio, wald, and logrank) are less than 0.05, the treatment is statistically significant. Now since HR for treated = 0.6113237, it indicates a strong relationship between the treatments and decreased risk of death.
+
+
+#### 3. Flaw or not?
+This approach sort of provides a hazard ratio of interst, but it has a significant flaws. Because for the patients who receive the treatment (treated=1), it also has the informtion regarding Start.Time(the time after diagnosis that they started treatment), and it is not included in the cox's model using the above code. So the follow-up time may not exactlly show time spent until the death or study outcome for the group who received the treatment, if the treatment is not accepted at the begining of the recorded follow-up time.
+
+#### 4
+```{r}
+head(TDC2$Stop-TDC2$Start)
+```
+TDC2 provides start time points and stop time points for the follow-up time and Start.Treat if the patients receive the treatment, while TDC1 provides the time duration for the time of follow-up and Start.Treat. But the two datasets contain the same information. If a patient does not have the Start.Treat recorded because the treated = 0 in TDC1, the start and stop time points will not be recorded in the TDC2 as well. However, in TDC1, follow-up time and Start.Time are stored separately in two columns. In TDC2, the structure is able to show both follow-up time for treated=0, and follow-up & Start.Time for treated=1 at the same level. 
+
+
+
+#### 5
+```{r}
+summary(coxph(Surv(time=Start, time2=Stop, event=Event) ~ Treated, data=TDC2))$conf.int
+
+```
+
+
+#### 6
+```{r}
+# p-value for treated
+summary(coxph(Surv(time=Start, time2=Stop, event=Event) ~ Treated, data=TDC2))$coef[,5]
+```
+Since p-values for Treat as well as all three tests(likelihood ratio, wald, and logrank) are less than 0.05, the treatment is statistically significant. Now since HR for treated = 1.971108, it indicates a strong relationship between the treatments and increased risk of death.
+
+
+
+### 7.
+Immortal time in observational studies can bias the results for the treatment group because it fails to present the death or study of outcome from the follow-up time. For example, the treated group may encounter a situation that their treatment status was delayed or had a wait period, in other words, not at the beginning when the follow-up time started to be recorded.
+
+In dataset TDC1, it has the problem because the general follow-up time for the two groups with and without the treatment fails to include the information explained above, and it is hard to feed the second column - Start.Time into the coxph model. 
+
+
+#### 8.
+As a result, the model using TDC2 is the right approach, because it avoids the immortal time bias. 
