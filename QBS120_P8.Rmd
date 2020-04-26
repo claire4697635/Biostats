@@ -1,0 +1,289 @@
+---
+title: "QBS120_P8"
+output: html_document
+---
+
+
+QBS 120 Problem Set 8
+
+Author: Claire Wang
+
+Problem 1:
+significance level $\alpha$, also probability of type 1 error
+probability of type 2 error $\beta$
+power $1-\beta$
+effect size $|\mu_0-\mu_A|$
+standard deviation $\sigma$
+sample size $N$
+(a):
+```{r}
+library(pwr)
+mu.m0 <- 0.5
+mu.m1 <- 1
+power <- 0.8
+effectsize = (mu.m1 - mu.m0)/1
+pwr.t.test(n= NULL, d= effectsize, sig.level = 0.05, power = 0.8, type = "two.sample" )$n
+# n = 63.77~64
+# the total of n bulk tissue samples would be n * 64 = 128
+
+```
+
+
+Problem 1
+(b):
+No. Since 10 out of 1000 genes are DE in Expierment A and 20 out of 100 are DE in Experiment B, the statistical significant conclusion would vary between the two experiments. And the the parameters we apply to calculate n would vary, hence obtaining a different n in Experiment B.
+
+
+(c):
+```{r}
+pwr.t.test(n= 50/2, d= effectsize, sig.level = 0.05, power = NULL, type = "two.sample" )$power
+```
+
+
+(d):
+```{r}
+B <- 1000
+n <- 50/2
+sim.M0 <- matrix(rnorm(B*n, mean=0.5, sd=1), nrow=B, ncol=n)
+sim.M1 = matrix(rnorm(B*n, mean=1.0, sd=1), nrow=B, ncol=n)
+# calculate the power by doing (# of rejecting H_0)/(# tests)
+
+pval <- rep(0,B)
+power.test <- rep(0,B)
+
+for (i in 1:B){
+  t_Test <- t.test(sim.M0[i,], sim.M1[i,], conf.level = 0.95)
+  pval[i] <- t_Test$p.value
+  power.test <- length(which(pval<0.05))/B
+}
+t_Test$p.value
+power.test
+# the simulated power here is close to the theoretical power = 0.4101003.
+```
+
+(e): 
+
+** corrections **
+To increase the power, a researcher could:
+increase the significance level; increase the effect size; increase the sample size
+
+(f):
+** below is theoretical power, need to get empirical power via simulation **
+ in a U(0,1) distribution, $\mu_{M1} = \frac{1}{2}(0+1)=\frac{1}{2}$, and $Var_{M1} = \frac{1}{12}(b-a)^2 = \frac{1}{12}(1-0)^2=\frac{1}{12}$
+The pooled standard deviation for both of the $M_0$ and $M_1$ samples is:
+$$SD_{pooled} = \sqrt{\frac{SD_{M0}^2+SD_{M1}^2}{2}} = \sqrt{\frac{1^2+(\frac{1}{12})^2}{2}}=0.7096$$
+
+```{r}
+effectsize1 = (mu.m1 - mu.m0)/0.7096
+pwr.t.test(n= 50/2, d= effectsize1, sig.level = 0.05, power = NULL, type = "two.sample" )$power
+
+```
+
+** redo it via simulation **
+```{r}
+B <- 1000
+n <- 50/2
+sim.M0.1 <- matrix(rnorm(B*n, mean=0.1, sd=1), nrow=B, ncol=n)
+sim.M1.1 = matrix(runif(B*n, min=0, max=1), nrow=B, ncol=n)
+# calculate the power by doing (# of rejecting H_0)/(# tests)
+
+pval <- rep(0,B)
+power.test <- rep(0,B)
+
+for (i in 1:B){
+  t_Test <- t.test(sim.M0.1[i,], sim.M1.1[i,], conf.level = 0.95)
+  pval[i] <- t_Test$p.value
+  power.test <- length(which(pval<0.05))/B
+}
+t_Test$p.value
+power.test
+```
+
+
+
+Problem 2:
+(a):
+
+```{r}
+#(a):
+biased.sd = function(x) {
+  biased.var = mean((x-mean(x))^2)
+  return (sqrt(biased.var))
+}
+coef.of.skewness = function(x) {
+  b.1 = mean((x - mean(x))^3)/biased.sd(x)^3
+  return (b.1)
+}
+
+B=1000
+n=100
+sim.data = matrix(rnorm(B*n), nrow=B, ncol=n)
+sim.b.1 = matrix(apply(sim.data, 1, coef.of.skewness), nrow=B, ncol=n)
+
+power.test <- rep(0,10)
+for (i in 1:10){
+test.data = matrix(rpois(1000*100, lambda=i), nrow=1000, ncol=100)
+test.b.1 = apply(test.data, 1, coef.of.skewness)
+ranked.sim.b.1 = sort(sim.b.1)
+simPVal = function(x, ranked.sim.values) {
+  n = length(ranked.sim.values)
+  smaller.vals =which(ranked.sim.values <= x)
+  if (length(smaller.vals) == 0) {
+    alpha.low = 0
+    } else{
+      alpha.low = length(smaller.vals)/n
+      }
+  larger.vals =which(ranked.sim.values >= x)
+  if (length(larger.vals) == 0) {
+    alpha.hi = 0
+    } else{
+      alpha.hi = length(larger.vals)/n
+      }
+  p.val = 2*min(alpha.low, alpha.hi)
+  return (p.val)
+  }
+p.values = sapply(test.b.1, function(x) simPVal(x, ranked.sim.b.1))
+power.test[i] <- length(which(p.values<0.05))/B
+}
+power.test
+Lambda <- seq(1:10)
+
+plot(Lambda, power.test)
+# as lambda increases, the power should decreases since the test.data becomes less normal. It matches my expectation.
+
+
+#(b):
+power.test1 <- rep(0,10)
+test.data = matrix(rpois(1000*100, lambda=1), nrow=1000, ncol=100)
+test.b.1 = apply(test.data, 1, coef.of.skewness)
+ranked.sim.b.1 = sort(sim.b.1)
+simPVal = function(x, ranked.sim.values) {
+  n = length(ranked.sim.values)
+  smaller.vals =which(ranked.sim.values <= x)
+  if (length(smaller.vals) == 0) {
+    alpha.low = 0
+    } else{
+      alpha.low = length(smaller.vals)/n
+      }
+  larger.vals =which(ranked.sim.values >= x)
+  if (length(larger.vals) == 0) {
+    alpha.hi = 0
+    } else{
+      alpha.hi = length(larger.vals)/n
+      }
+  p.val = 2*min(alpha.low, alpha.hi)
+  return (p.val)
+}
+p.values = sapply(test.b.1, function(x) simPVal(x, ranked.sim.b.1))
+
+for (i in 1:10){
+  power.test1[i] <- length(which(p.values<(i/100))/B)
+}
+power.test1
+
+plot(Lambda, power.test1)
+# it matches my expectation since the significance level increases, power should increases as well.
+```
+power goes down as lamda goes up. increase lamda, less normal
+
+
+
+
+
+Problem 3: ** corrections **
+
+```{r}
+simTabletData = function() {
+  return(data.frame(
+    lab=as.factor(c(1,2,3,4,5,6,7)),
+    data = rnorm(70, 4, sd=sqrt(0.0037))))
+}
+sim.1 = simTabletData()
+sim.2 = simTabletData()
+boxplot(data ~ lab, sim.1, main="Sim 1")
+boxplot(data ~ lab, sim.2, main="Sim 2")
+```
+The variation of the lab values is quite small relative to the mean so it does not appear fromthese simulations that the mean level differs.  The variance looks different but again is smallin magnitude. 
+
+
+
+
+
+Problem 4:
+
+when $I=2$, $F = \frac{SS_B/(I-1)}{SS_W/(I(I-1))}=\frac{SS_B}{SS_W/[2(J-1)]}$
+
+$F=\frac{J[(\bar Y_1. - \bar Y..)^2 + (\bar Y_2. - \bar Y..)^2]}{\sum[(Y_{1j}-\bar Y_1.)^2 + (Y_{2j}-\bar Y_2.)^2]/[2(J-1)]}$
+
+$\bar Y = \frac{\sum (Y_{1j} + Y_{2j})}{2J} = \frac{\bar Y_1. + \bar Y_2.}{2}$,
+and $(\bar Y_1 - \bar Y_{..})^2 = (\frac{\bar Y_{1.} - \bar Y_{2.}}{2})^2 = (\bar Y_2. - \bar Y_{..})^2$
+
+so $SS_B = \frac{J}{2}\times (\bar Y_1 - \bar Y_2)^2$
+
+and $SS_W = \sum [(Y_{1j} - \bar Y_{1.}) + (Y_{2j} - \bar Y_{2.})^2] = (J-1)J(S_{\bar Y_{1.}^2 - \bar Y_2.})$
+
+$\frac{SS_B}{SS_W/[2(J-1)]} = \frac{J/2*(\bar Y_1. - \bar Y_2.)^2}{(J-1)J(S_{\bar Y_{1.} - \bar Y_{2.}})/[2(J-1)]}=\frac{(\bar Y_{1.} - \bar Y_{2.})^2}{S_{\bar Y_{1.}-\bar Y_{2.}}^2}$
+
+this is equivalent to $T^2 = \frac{(\bar X - \bar Y)^2}{S_{\bar X - \bar Y}^2}$
+
+
+
+
+Problem 5:
+
+```{r}
+worms = data.frame(
+        group=as.factor(c(rep("Group I", 5), rep("Group II", 5),
+                 rep("Group III", 5), rep("Group IV", 5))),
+        count=c(279, 338,334,198,303,
+                 378,275,412,265,286,
+                 172,335,335,282,250,
+                 381,346,340,471,318))
+
+summary(worms)
+
+# four groups, each containing 5 samples
+# I = 4, J = 5
+
+wormsdata <- data.frame(
+          c(279, 338,334,198,303),
+          c(378,275,412,265,286),
+          c(172,335,335,282,250),
+          c(381,346,340,471,318)
+)
+
+I <- 4
+J <- 5
+
+# F test
+errors = as.vector(apply(wormsdata, 2, function(x) {
+  return (x-mean(x))
+  }))
+SS_W = sum(apply(wormsdata, 2, function(x) {
+  return ((J-1)*var(x))
+  }))
+SS_B = J*(I-1)*var(apply(wormsdata, 2, mean))
+(F = (SS_B/(I-1))/(SS_W/(I*(J-1))))
+(pval <- 1-pf(F, df1=(I-1), df2=I*(J-1)))
+
+# based on the F-test, there is no significant difference among the four groups
+# p value (0.119) is greater than 0.05, so there is weak evidence against the null hypothesis, that we cannot reject the null hypothesis. 
+
+qqnorm(scale(errors))
+abline(0,1,col="red")
+
+# the errors seem quite normal, and we could say there is no significant difference among the four groups
+
+lab = as.vector(sapply(1:4, function(x) {
+  rep(x, 5)}))
+data.2 = data.frame(lab = as.factor(lab),
+                    measurement=unlist(wormsdata))
+
+lm.results = lm(measurement ~ lab, data.2)
+as.matrix(anova(lm.results))
+
+# non parametric test
+kruskal.test(data.2$measurement, data.2$lab)
+
+# here the p-value is 0.1021 > 0.05, so we cannot reject the null hypothesis. There is no significant difference among the four groups.
+```
