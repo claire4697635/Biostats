@@ -1,0 +1,235 @@
+---
+title: "QBS120_P4"
+output:
+  html_document: default
+  pdf_document: default
+Author: Claire wang
+---
+
+QBS 120 HW 4
+
+Author: Claire Wang
+
+Problem 1 (Based on Rice 6.3):
+
+(a):
+
+$P(|\bar{X}|<c) = P(-c<\bar{X}<c)$, assume $0 \leqslant c$.
+
+since $X \sim N(0,1)$, and $\bar{X} \sim \frac{1}{n} \sum X_i$ 
+then $\bar{X} \sim N(0, \frac{1}{n})$
+
+this is because $E[\bar{X}] = 0$, 
+
+and $Var(\bar{X}) = Var(\frac{1}{n} \sum X_i) = \frac{1}{n^2}Var(\sum X_i) = \frac{1}{n^2}(nVar(X_i)) = \frac{1}{n^2}n \sigma^2 = \frac{1}{n} \sigma^2 = \frac{1}{n}$
+
+therefore, $P(-c<\bar{X}<c) = P(\bar{X} \leqslant c) - P(\bar{X} \leqslant -c) = P(\bar{X} \leqslant c) - (1 - P(\bar{X} \leqslant c)) = 2P(\bar{X} \leqslant c) -1$
+
+$P(-c<\bar{X}<c) = 2 \Psi (\frac{c-0}{\sqrt{\frac{1}{n}}})-1 = 2 \Psi(\sqrt{n}c) -1 =  0.5$,
+
+$\Psi(\sqrt{n}c) = 0.75$,
+
+$\Psi^{-1}(0.75) = \sqrt{n}c$,
+
+$c = \frac{\Psi^{-1}(0.75) }{\sqrt{n}}$
+
+
+(b):
+```{r}
+n <- seq(5,100)
+y <- qnorm(0.75, mean = 0, sd = sqrt(1/n))
+plot(n,y, xlab = "n", ylab = "c", main = "c vs. n", type="l")
+```
+
+
+(c):
+if we don't know the variance, we estimate it from the random sample:
+$\hat{\sigma}^2 = \frac{1}{n} \sum(X_i - \bar{X})^2$.
+
+We then need to know $\bar{X}$.
+
+
+
+
+
+Problem 2 (Based on Rice 6.6):
+
+(a):
+the random variable $T = \frac{Z}{\sqrt{U/n}}$ , that $Z \sim N(0,1)$ and $U \sim X_n^2$
+the density of $t_n$ is $f(t) = \frac{\Gamma [(n+1)/2]}{\sqrt{n \pi \Gamma (n/2)}} (1+ \frac{t^2}{n})^{-(n+1)/2}$
+
+now $T^2 = \frac{Z^2}{U/n} = \frac{V/1}{U/n}$, where $V \sim X_1^2$
+
+which indicates that $T^2 \sim F_{1,n}$
+
+
+
+(b):
+```{r}
+x.vals = seq(from=1, to=1000)
+
+r_Xsqrt_1 <- rchisq(x.vals, df=1)
+r_Xsqrt_10 <- rchisq(x.vals, df=10)
+r_Z <- rnorm(x.vals, mean = 0, sd = 1)
+
+
+Tsqrd <- r_Z^2/(r_Xsqrt_10/10)
+Tsqrd_density <- density(Tsqrd)
+
+plot(Tsqrd_density, col = "blue")
+
+#W = (U/1)/(V/n), U~Xsqrt_1, V~Xsqrt_n, here n =10
+
+F_rm <- rf(x.vals, df=1,df2=10)
+F_density <- density(F_rm)
+
+lines( F_density, lty="dashed")
+
+```
+
+
+
+Problem 4 (Based on Rice 7.3):
+(a)  The population mean.
+No
+it is the average of a constant.
+
+The function of entire population is not random vriable
+
+(c)  The sample size, n.
+No
+It is a constant.
+
+(d)  The sample mean.
+Yes
+It is RV since it is calculated by $\frac{1}{n}\sum X_i$, which depends on the RV $X_i$
+
+(e)  The variance of the sample mean.
+No
+it is a constant, which is equivalent to $\frac{G^2}{n}(1-\frac{n-1}{N-1})$
+
+(f)  The largest value in the sample.
+Yes
+Because the largest value is among the the elements of in the population size, which are RV's.
+
+(g)  The population variance.
+No
+it is not random, though it is an unknown constant
+
+(h)  The estimated variance of the sample mean.
+Yes
+it is a RV, since $s_{\bar{X}} =  \sqrt{\frac{s^2}{n}(1-\frac{n}{N})}$, 
+
+and $s = \frac{1}{n} \sum (X_i - \bar{X_n})^2$  is a rV.
+
+
+
+
+
+Problem 5 (Based on Rice 7.4):
+
+(a):
+Standard error of $\bar{X}$, $SD(\bar{X}) = \sqrt{Var(\bar{X})} = \frac{\sigma}{\sqrt{n}}$
+
+for population 1, $SD(\bar{X}) = \frac{\sigma_1}{\sqrt{n_1}}$
+
+for population 2, $SD(\bar{Y}) = \frac{\sigma_2}{\sqrt{n_2}} = \frac{2\sigma_1}{\sqrt{2n_1}} = \frac{\sqrt{2}\sigma_1}{\sqrt{n_1}}$
+
+since $SD(\bar{X}) \leqslant SD(\bar{Y})$, therefore population 1 is reasonably more accurate.
+
+(b):
+to make $SD(\bar{X})= SD(\bar{Y})$, then $\frac{\sigma_1}{\sqrt{n_1}} = \frac{\sigma_2}{\sqrt{n_2}}$
+
+that is, $\frac{n_2}{n_1} = \frac{\sigma_2^2}{\sigma_1^2} = 4$
+
+(seems like we are still using $\sigma_2 = 2 \sigma_1$, but not using $n_2 = 2n_1$)
+
+
+(c):
+```{r}
+x1.vals = seq(from=1, to=100)
+x2.vals = seq(from=1, to=400) #solved from (b), that n_2 = 4n_1
+
+mean1 <- sapply(1:1000, function(x){
+        p1 <- rnorm(x1.vals, mean = 1, sd=1)
+        return(mean(p1)) 
+       
+})
+
+ density_mean1 <- density(mean1)
+plot(density_mean1, ylim=c(0,4), col = "blue")
+
+
+mean2 <- sapply(1:1000, function(x){
+        p2 <- rnorm(x2.vals, mean = 1, sd=2) # sd_2 is given
+        return(mean(p2)) 
+})
+ density_mean2 <- density(mean2)
+lines(density_mean2, lty="dashed")
+
+# The distributions look similar. They won't look identical because here the two sets of the random variables are generated separately. 
+
+```
+
+
+
+Problem 6 (Based on Rice 7.10):
+
+It is false. It rephrase the central limit theorem in an unappropriate way.
+
+CLT states that the sampling distribution of the sample means approaches a normal distribution as the sample size gets larger no matter if the population distribution is normal distribution or not. 
+
+But here it has the limit. That if the population distribution is uniform distribution, no matter how large the sample size is, the sample distribution will always be uniform distribution.
+
+
+
+
+
+
+Problem 7 (Based on Rice 7.16):
+(a): True
+
+(b): False
+
+(c): False
+
+(d): False
+
+it means that the probability that $\mu$ lies in the convidence interval is approximately 95%
+
+therefore, in (b) you cannot say that the one "single" interval contains the sample mean with probability 0.95.
+in (c), you cannot even say the confidence interval contains 95% of the population, because it is not about population
+in (d), you cannot say 95% of the confidence interval contains mu. Because it is not the right way to express possibility. 
+
+
+
+Problem 8 (Based on Rice 7.19):
+
+(a):
+90% confidence interval:
+$P(\mu \geqslant \bar{X} - ks_{\bar{X}} ) = 0.9$,
+where $s_{\bar{X}} =  \sqrt{\frac{s^2}{n}(1-\frac{n}{N})}$.
+
+then 
+$P(\bar{X},+ \infty)=0.5$
+
+now 
+$P(\bar{X}-ks_\bar{X},\bar{X})=0.9 - P(\bar{X},+ \infty)=0.4$
+ 
+therefore we have $k = 1.28$
+
+
+(b):
+95% confidence interval:
+similarly, 
+$P(\mu \geqslant \bar{X} - ks_{\bar{X}} ) = 0.95$,
+
+$P(-\infty,\bar{X})=0.5$
+
+then $P(\bar{X},\bar{X}+kS_\bar{X})= 0.95 - P(-\infty,\bar{X}) = 0.45$
+
+and $k = 1.64$
+
+
+
+
