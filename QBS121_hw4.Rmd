@@ -1,0 +1,184 @@
+---
+title: "QBS121_hw4"
+output: html_document
+---
+
+# QBS 121 Hw 4
+
+## 1 Data Analyses
+### 1.1 Modelling Student Absences
+
+#### 1.1.1 Univariable model
+```{r}
+library(MASS)
+data(quine)
+Cov <- as.data.frame(quine[, c(1:4)])
+absent <- quine[,"Days"]
+
+# using Poisson regression
+Univ <- matrix(nrow=0, ncol=4)
+dimnames(Univ)[[2]] <- c("Odds Ratio", "95%CI Lo", "Up", "P-value") 
+for (i in 1:dim(Cov)[2]) {
+  os <- summary(glm(absent ~ Cov[,i], family=quasipoisson))
+  Univ <- rbind(Univ, c(exp(os$coef[2,1:2] %*% matrix(nrow=2, ncol=3, c(1,0,1,-2,1,+2))), os$coef[2,4]))
+}
+dimnames(Univ)[[1]] <- names(Cov)
+
+
+# negative binomial regression
+Univ.1 <- matrix(nrow=0, ncol=4)
+dimnames(Univ.1)[[2]] <- c("Odds Ratio", "95%CI Lo", "Up", "P-value") 
+for (i in 1:dim(Cov)[2]) {
+  os.1 <- summary(glm.nb(absent ~ Cov[,i]))
+  Univ.1 <- rbind(Univ.1, c(exp(os.1$coef[2,1:2] %*% matrix(nrow=2, ncol=3, c(1,0,1,-2,1,+2))), os.1$coef[2,4]))
+}
+dimnames(Univ.1)[[1]] <- names(Cov)
+
+# comparison:
+Univ
+Univ.1
+
+
+```
+The Odds Ratio for the univariable models are the same between poisson regression in conjunction with sandwich variance and negative binomial models, while poisson regression has slightly different p-values than negative binomial models for each coefficient. Poisson regression also tend to have slightly different 95% CIs than negative binomial regression for each coefficient. The overall results are still similar compared to each other.
+
+
+#### 1.1.2 Multivariable model using all of the variables
+```{r}
+# poisson
+(pois.all <- summary(pois.o <- glm(Days ~., data= quine, family=quasipoisson)))$coef
+
+# negative binomial
+(neg.binom.all <- summary(neg.binom.o <- glm.nb(Days ~., data= quine)))$coef
+
+# standard errors
+library(sandwich)
+library(lmtest)
+(svar <- sandwich(pois.o))
+(svar.1 <- sandwich(neg.binom.o))
+
+coeftest(pois.o, vcov=svar)
+coeftest(neg.binom.o, vcov=svar.1)
+```
+Now the estimated coefficients for the multivariable models are not the same between poisson and negative binomial models. But still, poisson regression has slightly different standard errors and p-values than negative binomial models for each coefficient. At the same time, poisson regression has slightly different z-values than negative binomial regression for each coefficient. The overall results are still similar compared to each other.
+
+The sandwich covariance matrix estimates of poisson and negative binomial regresson models, as well as the z test of coefficients are similar to each other.
+
+
+
+
+### 1.2 Modelling Incidence of Hypoglycemia in Children with Type 1 Diabetes
+
+#### 1.2.1 the incidence of hypoglycemia
+```{r}
+setwd("~/Documents/QBS 121")
+Hypoglycemia <- read.csv("~/Documents/QBS 121/BDT1DM.txt")
+
+# 1.
+incidence <- sum(Hypoglycemia$Hypoglycemia)/sum(Hypoglycemia$FolUpTime)
+
+# 2.
+inc <- as.matrix(Hypoglycemia$Hypoglycemia/Hypoglycemia$FolUpTime)
+Hypoglycemia$FolUpTime <- log(Hypoglycemia$FolUpTime)
+cov.hypo <- as.data.frame(Hypoglycemia[,c(1:14,16)])
+NoMiss <- rowSums(is.na(cbind(inc,cov.hypo))) == 0
+inc <-(inc[NoMiss])
+cov.hypo <- cov.hypo[NoMiss,]
+
+(summary(glm(inc ~ cov.hypo$FolUpTime, family=poisson)))$coef
+
+# 3.
+Univ.2 <- matrix(nrow=0, ncol=4)
+dimnames(Univ.2)[[2]] <- c("Odds Ratio", "95%CI Lo", "Up", "P-value") 
+for (i in 1:dim(cov.hypo)[2]) {
+  os.2 <- summary(glm(inc ~ cov.hypo[,i], family=quasipoisson))
+  Univ.2 <- rbind(Univ.2, c(exp(os.2$coef[2,1:2] %*% matrix(nrow=2, ncol=3, c(1,0,1,-2,1,+2))), os.2$coef[2,4]))
+}
+dimnames(Univ.2)[[1]] <- names(cov.hypo)
+Univ.2
+
+# 4.
+Univ.3 <- matrix(nrow=0, ncol=4)
+dimnames(Univ.3)[[2]] <- c("Odds Ratio", "95%CI Lo", "Up", "P-value") 
+for (i in 1:dim(cov.hypo)[2]) {
+  os.3 <- summary(glm.nb(inc ~ cov.hypo[,i]))
+  Univ.3 <- rbind(Univ.3, c(exp(os.3$coef[2,1:2] %*% matrix(nrow=2, ncol=3, c(1,0,1,-2,1,+2))), os.3$coef[2,4]))
+}
+dimnames(Univ.3)[[1]] <- names(cov.hypo)
+Univ.3
+
+# 5. a multivariable model using LASSO
+library(glmnet)
+inc <- as.matrix(inc)
+cov.hypo <- as.matrix(cov.hypo)
+(o.lasso <- glmnet(y=inc, x=cov.hypo, family="poisson"))
+plot(o.lasso, xvar="lambda")
+(o.cv.lasso <- cv.glmnet(y=inc, x=cov.hypo, family="poisson"))
+plot(o.cv.lasso)
+#colSums(o.lasso$beta!=0)
+
+
+# 6. do a multivariable poisson regression
+(summary(glm(inc ~cov.hypo, family=quasipoisson)))$coef
+```
+Here we should take a look at the row of cov.hypoINSUR. The p-value is smaller than 0.05 so the results are significant. The estimated coefficient is -3.345345e-01, meaning when controlling for other covariates, increasing one unit of insurance status would decrease the hypoglycemic incidence by 3.345345e-01 unit of length. So the insurance status has a effect on hypoglycemic incidence. 
+
+
+
+## Simulate and Analyze
+
+### 2.1 Large Counts: Linear Regression vs Poisson
+```{r}
+n <- 500
+Z1 <- rnorm(n)
+Z2 <- rnorm(n)
+Y <- rpois(n,lambda=100*1.5**Z1/1.2**Z2)
+
+plot(Z1, Y)
+plot(Z2, Y)
+
+# multivariable poisson regression
+(summary(os.pois <- glm(Y~Z1 + Z2, family=poisson)))
+# multivariable linear regression
+(summary(os.lm <- lm(Y ~ Z1 + Z2)))
+# multivariable linear regression using log
+(summary(os.lm.log <- lm(log(Y) ~ Z1 + Z2)))
+
+# compare standard errors
+(svar.pois <- sandwich(os.pois))
+(svar.lm <- sandwich(os.lm))
+(svar.lm.log <- sandwich(os.lm.log)) 
+
+# compare z-values
+coeftest(os.pois, vcov=svar.pois)
+coeftest(os.lm, vcov=svar.lm)
+coeftest(os.lm.log, vcov=svar.lm.log)
+```
+
+The poisson regression estimates and the linear model estimates with the log(Y) one are very very close to each other, until some different numbers starting at the 3rd decimal. The standard errors, t-values, and p-values are also quite close to each other. However, the linear model estimate without adjusting Y has different result compared to the other two models.
+
+Similar results happen as the poisson regression model and the linear model with the log(Y) one have very similar results of the standard erros from the method of sandwich covariance matrix estimates. Also, the z-values from the poisson regression is pretty close to the t-value from the linear regression with the log(Y) one model. However, the liniear model without adjusting Y has different standard errors and t-values compared to the other two models.
+
+
+### 2.2 Binary Endpoint: Logistic vs Poisson
+```{r}
+n <- 1000
+X <- runif(n) < 0.5
+Z <- rnorm(n)
+Y <- runif(n) < exp(-1.0 + 0.5*X - 0.1*Z)
+
+# logistic regression
+summary(glm(Y ~ X + Z, family=binomial))$coef
+# poisson regression without robust standard errors
+summary(o.pois <- glm(Y ~ X + Z, family=poisson))$coef
+# corrected for over or under dispersion
+summary(o.pois <- glm(Y ~ X + Z, family=quasipoisson))$coef
+
+# or
+(s.var <- sandwich(o.pois))
+coeftest(o.pois, vcov=s.var)
+exp(o.pois$coef)
+```
+The logistic regression estimate has slightly larger standard errors compared to poisson regression without robust SE an poisson regression corrected for over or under dispersion. The poisson regression estimate without robust SE has slightly larger SE compared to the poisson regression corrected for over or under dispersion.
+
+The p-values and z values from the three approaches are all kind o different, but the p-values are all significant. The two poisson regression approaches have the same estimate coefficients, but the logistic regression has different estimated coefficients compared to the other two approaches.
