@@ -1,0 +1,199 @@
+---
+title: "QBS121_hw2"
+output: html_document
+---
+QBS 121 Assignment 2: Linear Models II
+
+Author: Claire Wang
+
+
+
+1 Problem 
+
+1.Sensitivity of Main Efffect Coefficients When There Is An Interaction:}
+
+(a): 
+
+we have $E[Y|X_1,X_2]=a_0+a_1 X_1 + a_2 X_2 + a_{12}X_1 X_2$, then plut $X^\prime_i = X_i - m_i$ for $i=1,2$ back in to get:
+
+$E[Y|X_1',X_2']=a_0+a_1 X_1' + a_2 X_2' + a_{12}X_1' X_2'=a_0+a_1 (X_1 - m_1) + a_2 (X_2 - m_2) + a_{12}(X_1 - m_1)(X_2 - m_2))$
+
+$E[Y|X_1',X_2']= (a_0-a_1m_1-a_2m_2+a_{12}m_1m_2) + X_1(a_1-a_{12}m_2) + X_2(a_2-a_{12}m_1) + a_{12}X_1X_2 = b_0+b_1 X^\prime_1 + b_2 X^\prime_2 + b_{12}X^\prime_1 X^\prime_2$
+
+we get:
+
+$b_0 = a_0-a_1m_1-a_2m_2+a_{12}m_1m_2$,
+
+$b_1 = a_1-a_{12}m_2$,
+
+$b_2 = a_2-a_{12}m_1$,
+
+$b_{12} = a_{12}$.
+
+
+(b):
+The shift of the variables have an effect on the main effects ($X_1$ and $X_2$). It causes the coefficient of $X_1$ on $E[Y|X_1,X_2]$ reduced by amount of $a_{12}m_2$ and the coefficient of $X_2$ on $E[Y|X_1,X_2]$ reduced by amount of $a_{12}m_1$. But the coefficient of the interaction $X_1X_2$ does not change when there are variable shifts.
+
+
+(c): 
+
+given $E[Y|X] = a_0 + a_1X + a_2X^2$, then plug $X' = X + r$ back into the formula:
+
+$E[Y|X] = a_0 + a_1(X+r) + a_2(X+r)^2 = a_0+a_1X+a_1r+a_2X^2+a_2r^2+2a_2rX$
+
+$E[Y|X] = (a_0+a_1r+ a_2r^2)+X(a_1+2a_2r) + a_2X^2$.
+
+We can see that after X shifts, the intercept increases by amount of $a_1r+ a_2r^2$, the coefficient of X increases by amount of $2a_2r$, but the coefficient of the quadratic term $X^2$ does not change.
+
+
+
+
+2 Data Analyses
+
+
+2.1.Analysis of the FEV Data
+Load the data:
+```{r}
+FEV.Data <- read.delim("http://jse.amstat.org/datasets/fev.dat.txt", 
+sep="", header=FALSE)
+names(FEV.Data) <- c("Age","FEV","Height","Male","Smoker")
+attach(FEV.Data)
+
+```
+
+1. Effect of Smoking:
+```{r}
+#a univariable model
+uni_FEV_smoking <- lm(FEV.Data$FEV~FEV.Data$Smoker)
+summary(uni_FEV_smoking)$coef
+
+mul_FEV_smoking <- lm(FEV.Data$FEV~FEV.Data$Smoker+FEV.Data$Age+FEV.Data$Height+FEV.Data$Height+FEV.Data$Male)
+summary(mul_FEV_smoking)$coef
+mean(FEV.Data$Male)
+```
+From the univariate model, we see that the p-value is less than 0.05, therefore people who are smokers or not have significantly different FEV values. So smoking is an effect on FEV.
+From the multivariable model, we see that the p-value for the estimated Smoker coeff is greater than 0.05, therefore when controlling for age, height, and sex, smoker is not showing statistically significant enough of the evidence to prove that it is an effect on FEV.
+
+
+2. Effect of Age and Gender:
+```{r}
+summary(lm(FEV.Data$FEV ~ FEV.Data$Age*FEV.Data$Male))$coef
+
+#subgroup for males
+summary(lm(FEV ~ Age, subset(FEV.Data, Male==1)))$coef
+
+#subgroup for females, assuming FEV.Data$Male = 0 for Female
+summary(lm(FEV ~ Age, subset(FEV.Data, Male==0)))$coef
+
+###### or
+
+#subgroup for males
+Age_male_FEV <- as.data.frame(cbind(Age=FEV.Data$Age[FEV.Data$Male==1], FEV=FEV.Data$FEV[FEV.Data$Male==1], Male=FEV.Data$Male[FEV.Data$Male==1]))
+summary(lm(Age_male_FEV$FEV ~ Age_male_FEV$Age))$coef
+
+#subgroup for females
+Age_female_FEV <- as.data.frame(cbind(Age=FEV.Data$Age[FEV.Data$Male==0], FEV=FEV.Data$FEV[FEV.Data$Male==0], Female=FEV.Data$Male[FEV.Data$Male==0]))
+summary(lm(Age_female_FEV$FEV ~ Age_female_FEV$Age))$coef
+```
+Since there is a statistically significant interaction, the effect of age on FEV is different in males and females. Then we do subgroup analyses.
+Controlling for males, increasing one unit of age increase the FEV for 0.273 unit of length.
+Controlling for females, increasing one unit of age increase the FEV for 0.163 unit of length.
+
+
+3. Effect of Height and Gender:
+```{r}
+
+summary(lm(FEV.Data$FEV~FEV.Data$Height*FEV.Data$Male))$coef
+
+#subgroup for males
+summary(lm(FEV ~ Height, subset(FEV.Data, Male==1)))$coef
+
+#subgroup for females, assuming FEV.Data$Male = 0 for Female
+summary(lm(FEV ~ Height, subset(FEV.Data, Male==0)))$coef
+
+
+#### or 
+
+#subgroup for males
+Height_male_FEV <- as.data.frame(cbind(Height=FEV.Data$Height[FEV.Data$Male==1], FEV=FEV.Data$FEV[FEV.Data$Male==1], Male=FEV.Data$Male[FEV.Data$Male==1]))
+summary(lm(Height_male_FEV$FEV ~ Height_male_FEV$Height ))$coef
+
+#subgroup for females
+Height_female_FEV <- as.data.frame(cbind(Height=FEV.Data$Height[FEV.Data$Male==0], FEV=FEV.Data$FEV[FEV.Data$Male==0], Female=FEV.Data$Male[FEV.Data$Male==0]))
+summary(lm(Height_female_FEV$FEV ~ Height_female_FEV$Height))$coef
+```
+Since there is a statistically significant interaction, the effect of Height on FEV is different in males and females. Then we do subgroup analyses.
+Controlling for males, increasing one unit of height increase the FEV for 0.140 unit of length.
+Controlling for females, increasing one unit of height increase the FEV for 0.112 unit of length.
+
+
+2.2.Simulate and Analyze
+```{r}
+n <- 30
+X <- matrix(nrow=n,ncol=60)
+for (i in 1:30) 
+  X[,i] <- runif(n) <= 0.5
+for (i in 31:45) 
+  X[,i] <- runif(n) <= 0.25
+for (i in 46:60) 
+  X[,i] <- runif(n) <= 0.10
+X <- 1*X
+
+power.t.test(n=30/2, power=0.9)
+beta <- c(1.5, rep(0,29), 3, rep(0,14), 5, rep(0,14))
+Y <- X %*% beta + rnorm(n)
+summary(lm(Y~X))
+```
+The standard errors, t-vaues, and p-value are not available from X30 to X60; The estimated coefficients, standard errors, t-vaues, and p-value are not available from Intercept to X29. We run into issues in parameter estimation if there is more candidate exposures than subjects of a continuous endpoint.
+
+```{r}
+# Lasso for variable selection
+library(glmnet)
+o.lasso <- glmnet(X, Y, alpha=1)
+plot(o.lasso)
+
+o.cv.lasso <- cv.glmnet(X, Y, alpha=1)
+# THe numbers at top on the plot below is number of non-zero coefficients
+plot(o.cv.lasso, log="y")
+text(log(o.cv.lasso$lambda)[index <- 10*(1:5)], rep(max(o.cv.lasso$cvm), 5), index)
+
+X.select <- X[, o.lasso$beta[,30] != 0]
+
+# muultivariable on the reduced set
+summary(lm(Y ~ X.select))
+
+```
+Now we are able to see the estimations from Intercept no matter if candidate exposures are more than subjects of a continuous endpoint, X1 to X9. X1 to X0 are selected.
+
+
+
+
+2.3 Simulate and Analyze
+```{r}
+n <- 300
+Z <- runif(n) < 0.5
+X <- rnorm(n) + ifelse(Z, 1.5, -1.5)
+Y <- ifelse(Z, X-2.5, X+2.5) + rnorm(n)
+summary(lm(Y ~ X))$coef
+
+summary(lm(Y ~ X, subset=Z))$coef
+summary(lm(Y ~ X, subset=!Z))$coef
+summary(lm(Y ~ X + Z))$coef
+plot(X, Y, col=ifelse(Z,2,5))
+```
+As we rerun the code, under unadjusted condition, X may not be an effect on Y, since the p-value is sometimes >=0.05, and sometimes < 0.05.
+
+We then need subgroup analyses to explore the relationship between X and Y with different situations of Z separately.
+
+summary(lm(Y ~ X, subset=Z))$coef shows the linear estimate between X and Y, where X and Y are from the sub dataset determined by Z. And since the p-values < 0.05, X is associate with Y when in the subset=Z.
+
+summary(lm(Y ~ X, subset=!Z))$coef shows the linear estimate between X and Y, where X and Y are from the sub dataset determined by !Z. And since the p-values < 0.05, X is associate with Y when in the subset=!Z.
+
+summary(lm(Y ~ X + Z))$coef shows the multivariate model of the effect of X on Y controlling for Z, and see that X does have an effect on Y when controlling for Z since the p-values < 0.05.
+
+The plot shows X and its dependent Y when Z values are TRUE (red points), as well as when Z values are FALSE (blue points). We see that the points are lower when Z is true since the red points are generally shifted to the right and lower than the blue points.
+
+```{r}
+summary(lm(Y ~ X*Z))$coef
+```
+There is an interaction of X and Z because the p-value for X:ZTRUE is less than 0.05. 
