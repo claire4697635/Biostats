@@ -1,0 +1,324 @@
+---
+title: "QBS 120 Hw 6"
+output: html_document
+Author: Claire Wang
+---
+
+Question 1 (Based on Rice 9.1):
+
+(a):
+significance level is type 1 error rate:
+$$\alpha = P(reject H_0|H0)$$
+
+Let $Y$ be the number of heads. $Y = 0$ or $Y=10$: reject the $H_0$ that the coin is fair
+
+then $$\alpha = P(Y=10 or Y=10 | p=\frac{1}{2})$$
+
+as a binomial RV, the likelihood for Y is:
+$$L(y|p.n) = (n choose y)p^y (1-p)^{n-y}$$
+here $$\alpha = (10 choose 0) \times 0.5^0\times 0.5^{10}+(10 choose 10) \times 0.5^{10}\times 0.5^0 = 0.001953125$$
+
+
+(b):
+power of the test is the probability of rejecting $H_0$ when it is false:
+$$1-\beta = P(reject H_0|H_A)$$
+
+here $1-\beta = P(Y=0 or Y=10|p=\frac{1}{2})$
+$1-\beta = (10choose0) \times 0.1^0 \times 0.9^{10}+(10choose10) \times 0.1^{10} \times 0.9^{0} = 0.3486784$
+
+
+(c):
+again assume $H_0 = H_A = \frac{1}{2}$
+$$\alpha = P(Y\leqslant 1 or Y \geqslant9|p=\frac{1}{2})$$
+
+```{r}
+alpha <- pbinom(8,size=10,prob=1/2, lower.tail = F)+pbinom(1,size=10,prob=1/2,lower.tail = T)
+```
+
+
+
+Question 2: (Based on Rice 9.2)
+(a) simple
+  the domain is all we need to define a uniform distribution
+(b) simple
+  for a fair dice, the outcome of each face is equally probable
+(c) composite
+ the variance is not specified
+(d) composite
+  the variance is not specified
+
+
+
+
+Question 3: (Based on Rice 9.5)
+
+(a): False
+  it equals to the p that the null hypothesis is rejected based on the null hypothesis is true
+(b): False
+  it decreases as well
+(c): False
+  the significance leven does not equals to when the null hypothesis is true
+(d): False
+  the null hypothesis is correctly rejected (TP) is equal to the power of  the test
+(e): False
+  plus when the null hypothesis is true
+(f): False
+  type 1 could be more serious, vice versa
+(g): False
+  the power is computed due to the distribution of the test statistic under the alternative hypothesis
+(h): True
+ it is a RV
+ 
+ 
+ 
+ 
+ 
+ Question 4: (Based on Rice 9.12)
+ let $H_0$ have $\theta_0$, and $H_A$ have $\theta_A$
+ the likelihood ratio is:
+ $$\frac{f_0(\boldsymbol{X})}{f_A(\boldsymbol{X})} = \frac{L(X|H_0)}{L(X|H_A)} =\frac{L_0(\theta_0)}{L(\hat{\theta})}$$
+ then $$\frac{L_0(\theta_0)}{L(\hat{\theta})}  = \frac{\prod \theta_0 e^{-\theta_0 x}}{\prod \hat{\theta} e^{-\hat{\theta} x}} = $$
+ 
+ now we need the mle of $\theta$:
+ $$L(\theta) = \prod \hat{\theta} e^{-\hat{\theta} x}$$
+ $$l(\theta) = nlog(\theta) - \theta \sum X_i$$
+$$l'(\theta) = \frac{n}{\theta} - \sum X_i$$
+let $l'\theta = 0$, solve for $\theta$ which is $\hat{\theta}$
+$$\hat{\theta} = \frac{1}{\bar{X}}$$
+so the likelihood now is:
+$$\frac{L_0(\theta_0)}{L(\hat{\theta})} = \frac{\theta_0^n e^{-\theta_0 \sum X_i}}{\hat{\theta} e^{-\hat{\theta} \sum X_i}} = (\frac{\theta_o}{\hat{\theta}})^n e^{\sum X_i ({-\theta_0+\hat{\theta}})} = (\frac{\theta_o}{\hat{\theta}})^n e^{\bar{X}(-\theta_0+\hat{\theta})}$$
+now we know $\hat{\theta} = \frac{1}{\bar{X}}$
+
+$$\frac{L_0(\theta_0)}{L(\hat{\theta})} = (\theta_0 \bar{X}e^{\bar{X}(-\theta_0+\frac{1}{\bar{X}})})^n = (\theta_0\bar X e^{(-\theta_0 \bar X +1)})^n$$
+
+if the likelihood is supposed to be larger than a constant c,
+then the rejection region is when the likelihood less than c
+
+
+so $$(\theta_0\bar X e^{(-\theta_0 \bar X +1)})^n \leqslant c$$
+$$\bar X e^{(-\theta_0 \bar X +1)} \leqslant c_1$$,
+
+and finally, $\bar X e^{(-\theta_0 \bar X)} \leqslant c_2$
+
+as a result, $\bar X e^{(-\theta_0 \bar X)} \leqslant c$
+
+
+
+
+Question 5 (Based on Rice 9.30):
+(a):
+ p-value = P(T>x) = 1 - P(T<x) = 1- F(T), which is V here.
+ 
+(b):
+F(T) has the uniform distribution: $F(T) \sim U(0,1)$, so $1 - F(T)$ is also a uniform distribution. Therefore, V is uniformally distributed.
+
+(c):
+to get $P(V>0.1)$, we already know that the distribution of V is uniform. therefore, $P(V>0.1) = 1- 0.1 = 0.9$
+
+(d):
+under the condition that the test that rejects if $V < \alpha$
+then $P(V<\alpha|H_0)$. 
+ 
+ Similar to (c), $P(V<\alpha|H_0) = \alpha$.
+ therefore, its significance level is $\alpha$
+ 
+ 
+ 
+ 
+ Question 6 (Based on Rice 9.40)
+ each of the two cells have hypothesized probability $p_1$ and $p_2$. we can say that $p_1+p_2=1$
+ similarly, $n=X_1+X_2$
+ 
+ the given formula becomes: $$\sum \frac{(X_i-np_i)^2}{np_i} = \frac{(X_1 -np_1)^2}{np_1} + \frac{(n-X_1 - n(1-p_1))^2}{n(1-p_1)}$$
+ 
+which equals $=\frac{(X_1 -np_1)^2}{np_1} + \frac{(-X_1+np_1)^2}{n(1-p_1)} = \frac{(X_1-np_1)^2(1-p_1) + (X_1 - n p_1)^2 p_1)}{np_1(1-p_1)} = \frac{(X_1 - n p_1)^2}{np_1(1-p_1)}$
+ 
+ 
+ 
+Question 7 (Based on Rice 9.42):
+since each bar has uniform composition, the number of breaks on ith bar will be the same for each bar. therefore we could only consider the binomial distributed of number of breaks (the null hypothesis):
+$$\theta_k = (5 choose k)p^k(1-p)^{5-k}$$, $0 \leqslant k \leqslant 5$
+
+now consider the probability for 280 bars:
+$N_0 = 157$, $N_1 = 69$, $N_2=35$, $N_3 = 17$, $N_4=1$, $N-5 = 1$ 
+joint pmf of all of the five cases is:
+$$p = \frac{280!}{N_0! N_1!N_2! N_3! N_4! N_5!} \theta_0^{N_0} \theta_1^{N_1} \theta_2 ^ {N_2} \theta_3 ^ {N_3} \theta_4 ^ {N_4} \theta_5 ^{N_5}$$
+
+
+$l(p) = \log(280!) - \log(N_0!)\log(N_1!)\log(N_2!)\log(N_3!)\log(N_4!)\log(N_5!)+ N_0\log(\theta_0)+ N_1\log(\theta_1)+ N_2\log(\theta_2)+ N_3\log(\theta_3)+ N_4\log(\theta_4)+ N_5\log(\theta_5)$
+
+$$l'(p) = [N_0\log(\theta_0)]'+[N_1\log(\theta_1)]'+[N_2\log(\theta_2)]'+[N_3\log(\theta_3)]'+[N_4\log(\theta_4)]'+ [N_5\log(\theta_5)]'$$
+
+$$l'(p)= \sum N_k (\frac{k}{p}-\frac{5-k}{1-p}) =  N_k (k(1-p)-(5-k)p) =0$$
+
+therefore $N_kk(1-p) = N_k (5-k)p$, $N_k (k-5p)=0$
+$p = \frac{\sum N_kk}{5\sum N_k} = \frac{1}{5} \bar{X}$
+
+noted that $\bar{X}$ is the sample average number of breaks of the 280 bars.
+
+so $\hat p =\frac{1}{5}\bar X = \frac{1}{5} \frac{1\times 69+2\times35+3\times17+4+5}{280} = 0.711$
+
+
+
+(b):
+with $\hat p = 0.711$, $\theta_0 = (5 choose 0) 0.711^0 (1-0.711)^5 = 0.465$, $\theta_1 = 0.385$, $\theta_2=0.128$, $\theta_3 = 0.0211$, $\theta_4 = 0.00175$, $\theta_5=0.000058$
+
+
+and $E_0 = 280\times 0.465 = 130.1$, $E_1 = 107.8$, $E_2 = 35.7$.
+comebine the last three bars, $E_3 = 28-\ times (0.0211+0.00175+0.000058) = 6.4$
+
+
+therefore Pearson's $\chi^2 = \sum \frac{(O_i-E_i)^2}{E_i}=\frac{(157-130.1)^2}{130.1} + \frac{(69-107.8)^2}{107.8}+ \frac{(35-35.7)^2}{35.7} + \frac{((17+1+1)-6.4)^2}{6.4} = 44.3$
+
+
+ 
+ Question 8:
+ 
+## corrected version ##
+
+```{r}
+biased.sd = function(x) {
+  biased.var = mean((x-mean(x))^2)
+  return (sqrt(biased.var))
+  }
+coef.of.skewness = function(x) {
+  b.1 = mean((x - mean(x))^3)/biased.sd(x)^3
+  return (b.1)
+}
+
+library(moments)
+x = rnorm(10)
+coef.of.skewness(x)
+skewness(x)
+
+B=10000
+n=100
+sim.data = matrix(rnorm(B*n), nrow=B, ncol=n)
+sim.b.1 = apply(sim.data, 1, coef.of.skewness)
+
+par(mfrow=c(2,1))
+hist(sim.b.1)
+plot(density(sim.b.1))
+
+qqnorm(sim.b.1)
+qqline(sim.b.1,distribution=qnorm,col="red")
+
+test.data = matrix(rnorm(1000*100), nrow=1000, ncol=100)
+test.b.1 = apply(test.data, 1, coef.of.skewness)
+ranked.sim.b.1 = sort(sim.b.1)
+simPVal = function(x, ranked.sim.values) {
+  n = length(ranked.sim.values)
+  smaller.vals =which(ranked.sim.values <= x)
+  if (length(smaller.vals) == 0) {
+    alpha.low = 0
+    } else{
+      alpha.low = length(smaller.vals)/n
+      }
+  larger.vals =which(ranked.sim.values >= x)
+  if (length(larger.vals) == 0) {
+    alpha.hi = 0
+    } else{
+      alpha.hi = length(larger.vals)/n
+      }
+  p.val = 2*min(alpha.low, alpha.hi)
+  return (p.val)
+  }
+p.values = sapply(test.b.1, function(x) simPVal(x, ranked.sim.b.1))
+p.values[1:10]
+
+# We expect that ifH0is true, the p-values will have a U(0,1) distribution.  The resultsmatch our expectation.
+
+
+
+test.data = matrix(rpois(1000*100, lambda=2), nrow=1000, ncol=100)
+test.b.1 = apply(test.data, 1, coef.of.skewness)
+p.values = sapply(test.b.1, function(x) simPVal(x, ranked.sim.b.1))
+p.values[1:10]
+
+#  In this case, the data are simulated underHAand the low value ofλmeans that thenormal approximate for the Poisson does not hold well so we would expect the p-valuesto not have a U(0,1) distribution.  In particular, we would expect more small p-valuesthat predicted by U(0,1).  The results match our expectations.
+```
+
+```{r}
+# (a):
+b1 <- function(n){
+  x<-matrix(0,length(n),1)
+  for (i in 1:length(n)) {
+    x[i,1]<-(n[i]-mean(n))^3
+    y<-sum(x[,1])/length(n)/sd(n)^3
+  }
+  print(y)
+}
+
+
+# (b)
+
+b1_dist <-matrix(0,1000,1)
+
+for (i in 1:1000) {
+ 
+    RV<-rnorm(100,0,1)
+   # b1<-coefficient_of_skewness(RV)
+    b1_dist[i,1]<-b1(RV)
+ 
+  }
+
+plot(density(b1_dist),main = "sampling distribution of b1")
+
+
+
+# (c):
+
+library(car)
+
+
+x1<-matrix(0,1000,1)
+for (i in 1:1000) {
+ 
+    RV1<-rnorm(100,0,1)
+
+    x1[i,1]<-b1(RV1)
+ 
+}
+
+p<-matrix(0,1000,1)
+p1<-matrix(0,1000,1)
+p2<-matrix(0,1000,1)
+
+for (i in 1:length(x1)) {
+  
+p1[i,1]<-(sum(b1_dist > x1[i]))/length(b1_dist)
+p2[i,1]<-(sum(b1_dist < x1[i]))/length(b1_dist)
+p[i,1]<-min(p1[i,1],p2[i,1])*2
+}
+
+qqPlot(p, distribution="unif")
+
+# the shape of the QQ plot shows my expectation, since H_0 is a true hypothesis, that the data sets are normal RV's. And it is a normal distribution since the distribution of p-values are fairly close to the U(0,1) trend.
+
+
+# (d):
+x2<-matrix(0,1000,1)
+
+for (i in 1:1000) {
+ 
+    RV2<-rpois(100,1)
+    x2[i,1]<-b1(RV2)
+}
+
+P<-matrix(0,1000,1)
+P1<-matrix(0,1000,1)
+P2<-matrix(0,1000,1)
+
+for (i in 1:length(x2)) {
+  
+P1[i,1]<-(sum(b1_dist > x2[i]))/length(b1_dist)
+P2[i,1]<-(sum(b1_dist < x2[i]))/length(b1_dist)
+P[i,1]<-min(P1[i,1],P2[i,1])*2
+}
+
+qqPlot(P, distribution="unif")
+
+# the shape of the QQ plot matches my expectation again, since now H_A is a true hypothesis because the data sets are poisson RV's, not the uniform RV's. so the right tails are above the theoretical uniform distribution.
+
+```
+
