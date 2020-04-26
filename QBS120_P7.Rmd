@@ -1,0 +1,385 @@
+---
+title: "QBS 120 Problem Set 7"
+output: html_document
+---
+
+
+Question 1 (Based on Rice 10.26)
+```{r}
+library(boot)
+library(MASS)
+
+
+iridium.data = c(136.6, 145.2, 151.5, 162.7, 159.1, 159.8, 160.8, 173.9, 160.1, 160.4, 161.1, 160.6, 160.2, 159.5, 160.3, 159.2, 159.3, 159.6,
+160.0, 160.2, 160.1, 160.0, 159.7, 159.5, 159.5, 159.6, 159.5)
+
+rhodium.data = c(126.4, 135.7, 132.9, 131.5, 131.1, 131.1, 131.9, 132.7,
+133.3, 132.5, 133.0, 133.0, 132.4, 131.6, 132.6, 132.2,
+131.3, 131.2, 132.1, 131.1, 131.4, 131.2, 131.1, 131.1,
+134.2, 133.8, 133.3, 133.5, 133.4, 133.5, 133.0, 132.8,
+132.6, 133.3, 133.5, 133.5, 132.3, 132.7, 132.9, 134.1)
+
+# (a)
+hist(iridium.data)
+hist(rhodium.data)
+
+# (b)
+library(sfsmisc)
+ecdf.ksCI(iridium.data)
+ecdf.ksCI(rhodium.data)
+
+
+# (c)
+plot(density(iridium.data))
+plot(density(rhodium.data))
+
+# (d)
+qqplot(iridium.data, rhodium.data, plot.it= TRUE, xlab=deparse(substitute(iridium.data)), ylab = deparse(substitute(rhodium.data)))
+
+# (e)
+plot(iridium.data)
+plot(rhodium.data)
+# the measurements in iridium data is approxmately in normal distribution, while the measurements in rhodium data have outliers and is not normally distributed. It is not reasonable, since the data seem not independent
+
+# (f)
+mean(iridium.data) 
+mean(rhodium.data) 
+
+mean(iridium.data,trim=.1)
+mean(rhodium.data,trim=.1)
+
+mean(iridium.data,trim=.2)
+mean(rhodium.data,trim=.2)
+
+median(iridium.data)
+median(rhodium.data)
+
+# need to compare
+huber(iridium.data,k=1.5)
+
+
+
+# (g):
+iridium_sd <- sqrt(var(iridium.data))
+rhodium_sd <- sqrt(var(rhodium.data))
+
+(iridium_mean.sterr=iridium_sd/sqrt(length(iridium.data)))
+(rhodium_mean.sterr=rhodium_sd/sqrt(length(rhodium.data)))
+
+alpha=0.10
+z.upperalphahalf=qnorm(1-alpha/2)
+
+iridium_mean.ci<-c(-1,1)*z.upperalphahalf* iridium_mean.sterr + mean(iridium.data) 
+print(mean(iridium.data) ) 
+print(iridium_mean.ci)
+
+rhodium_mean.ci<-c(-1,1)*z.upperalphahalf* rhodium_mean.sterr + mean(rhodium.data) 
+print(mean(rhodium.data) )
+print(rhodium_mean.ci)
+
+plot(density(iridium_mean.ci))
+plot(density(rhodium_mean.ci))
+
+
+# (h): 
+
+fcn.mean<- function(x, d) {
+  return(mean(x[d]))
+}
+
+fcn.trimmedmean <- function(x, d, trim=0) {
+  return(mean(x[d], trim/length(x)))
+}
+
+fcn.median<- function(x, d) {
+  return(median(x[d]))
+}
+
+
+
+# the bootstrap of sample mean of iridium and rhodium
+iridium.boot.mean <- boot(iridium.data, fcn.mean, R=1000)
+plot(iridium.boot.mean)
+print(iridium.boot.mean$t0)
+
+rhodium.boot.mean <- boot(rhodium.data, fcn.mean, R=1000)
+plot(rhodium.boot.mean)
+
+print(rhodium.boot.mean$t0)
+print(rhodium.boot.mean$t0)
+
+# standard errors
+print(sqrt(var(iridium.boot.mean$t)))
+print(sqrt(var(rhodium.boot.mean$t)))
+
+# 90% CI
+boot.ci(iridium.boot.mean,conf=.90, type="basic")
+boot.ci(rhodium.boot.mean,conf=.90, type="basic")
+
+
+# the bootstrap of sample median of iridium and rhodium
+iridium.boot.median= boot(iridium.data, fcn.median, R=1000)      
+plot(iridium.boot.median)
+
+rhodium.boot.median= boot(rhodium.data, fcn.median, R=1000)      
+plot(rhodium.boot.median)
+
+print(iridium.boot.median$t0)
+print(rhodium.boot.median$t0)
+
+# standard errors
+print(sqrt(var(iridium.boot.median$t)))
+print(sqrt(var(rhodium.boot.median$t)))
+
+# 90% CI
+boot.ci(iridium.boot.median,conf=.90, type="basic")
+boot.ci(rhodium.boot.median,conf=.90, type="basic")
+
+
+
+# the bootstrap of trimmed mean of iridium and rhodium
+
+# 10% trimmed mean
+iridium.boot.trimmedmean_10= boot(iridium.data, fcn.trimmedmean,trim=.1, R=1000)      
+plot(iridium.boot.trimmedmean_10)
+
+rhodium.boot.trimmedmean_10= boot(rhodium.data, fcn.trimmedmean,trim=.1, R=1000)      
+plot(rhodium.boot.trimmedmean_10)
+
+print(iridium.boot.trimmedmean_10$t0)
+print(rhodium.boot.trimmedmean_10$t0)
+
+# standard errors
+print(sqrt(var(iridium.boot.trimmedmean_10$t)))
+print(sqrt(var(rhodium.boot.trimmedmean_10$t)))
+
+# 90% CI
+boot.ci(iridium.boot.trimmedmean_10,conf=.90, type="basic")
+boot.ci(rhodium.boot.trimmedmean_10,conf=.90, type="basic")
+
+#20% trimmed mean
+iridium.boot.trimmedmean_20= boot(iridium.data, fcn.trimmedmean,trim=.2, R=1000)      
+plot(iridium.boot.trimmedmean_20)
+
+rhodium.boot.trimmedmean_20= boot(rhodium.data, fcn.trimmedmean,trim=.2, R=1000)      
+plot(rhodium.boot.trimmedmean_20)
+
+print(iridium.boot.trimmedmean_20$t0)
+print(rhodium.boot.trimmedmean_20$t0)
+
+# standard errors
+print(sqrt(var(iridium.boot.trimmedmean_20$t)))
+print(sqrt(var(rhodium.boot.trimmedmean_20$t)))
+
+# 90% CI
+boot.ci(iridium.boot.trimmedmean_10,conf=.90, type="basic")
+boot.ci(rhodium.boot.trimmedmean_10,conf=.90, type="basic")
+```
+
+
+
+
+
+Question 2 (Based on Rice 11.21):
+```{r}
+# (a)
+type.I.failure.times = c(3.03, 5.53, 5.6, 9.3, 9.92, 12.51, 12.95, 15.21, 16.04, 16.84)
+type.II.failure.times = c(3.19, 4.26, 4.47, 4.53, 4.67, 4.69, 12.78, 6.79, 9.37, 12.75)
+(n = length(type.I.failure.times))
+(m = length(type.II.failure.times))
+mean.diff = mean(type.I.failure.times) - mean(type.II.failure.times)
+var.a = var(type.I.failure.times) 
+var.b = var(type.II.failure.times)
+df = n+m-2
+var.p = ((n-1)*var.a + (m-1)*var.b)/df
+ci.delta = qt(.975,df=df)*sqrt(var.p)*sqrt(1/n + 1/m)
+(c(mean.diff-ci.delta, mean.diff+ci.delta))
+
+(T = mean.diff/(sqrt(var.p)*sqrt(1/n+1/m)))
+(p.value = 2*(1-pt(T, df=df)))
+
+# So, the probability of seeing a mean difference that large if the two measurement methods had the same expected value is only≈5.29%. We fail to reject the null hypothesis. Or, there is no difference between the types of bearings
+
+
+# (b):
+merged = c(type.I.failure.times, type.II.failure.times)
+ranks = rank(merged, ties.method="average")
+(B.ranks = ranks[(n+1):(n+m)])
+(R = sum(B.ranks))
+(E.R =(m*(m+n+1))/2)
+(sd.R = sqrt( n*m*(n+m+1)/12))
+(Z = (R - E.R)/sd.R)
+(p.val = 2*pnorm(Z))
+ wilcox.results = wilcox.test(type.I.failure.times, type.II.failure.times, conf.int=T, exact=T)
+ wilcox.results$p.value
+# wilcox.results$conf.int
+ 
+ # here, the p-values based on normal approximation and Wilcoxon Whitey test, which are 0.05878172 and 0.06301284, are pretty close.
+
+
+# (c):
+ # Here, both tests are fine since they lead to the same conclusion. But the normal test relies on the assumption that the two sample sets are normally distributed, and the second test would be better if we want to test the assumptions
+ 
+ 
+ 
+# (d): 
+(diffs = type.II.failure.times-type.I.failure.times)
+cor(type.I.failure.times, type.II.failure.times, method="pearson")
+d.bar = mean(diffs) 
+df = length(diffs)-1
+se = sd(diffs)/sqrt(df+1)
+q = qt(.95,df=df)
+(CI.90 = c(d.bar-q*se, d.bar + q*se))
+(p.val = 2*(1-pt(d.bar/se, df=df)))
+
+n= length(diffs) 
+pos.diffs = which(diffs >= 0)
+abs.diffs = abs(diffs)
+ranks = rank(abs.diffs)
+(W_plus =sum(ranks[pos.diffs]))
+
+
+
+```
+Question 2, continued 
+(d):
+
+$P(iridium < rhodium) = \frac{number of (iridium_i < rhodium_j)}{total number of pairs(iridium_i, rhodium_j)} = \frac{10+4+4+3+2+2}{10*10} = 0.75$
+
+Question 2, continued
+(e):
+```{r}
+
+fcn.pi<- function(df) {
+  merged = c(df[1], df[2])
+  ranks = rank(merged, ties.method="average")
+  n = length(df[1])
+  m = length(df[2])
+ B.ranks = ranks[(n+1):(n+m)]
+ R = sum(B.ranks)
+  return (1/(m*n)*(R-m*(m+1)/2))
+}
+dataf <- data.frame(type.I.failure.times,type.II.failure.times)
+pi.hats = apply(dataf, 2, function(x) {
+  return (fcn.pi(x))
+  })
+
+plot(density(pi.hats))
+
+sd_pi.hats <- 0.119
+
+# use the bootstrap to find 90% CI
+
+# 0.75 +- 1.65 * 0.119 = (0.55365 ,0.94635)
+```
+
+Question 2
+(e): corrected
+
+```{r}
+B = 10000
+boot.data.type.I = matrix(sample(type.I.failure.times, n*B,replace=T), nrow=B)
+boot.data.type.II = matrix(sample(type.II.failure.times, m*B,replace=T), nrow=B) 
+pi.hats = rep(0, B)
+
+computeRankSum = function(x.1, x.2) {
+  merged = c(x.1, x.2)
+  ranks = rank(merged, ties.method="average")
+  x.1.ranks = ranks[1:n]
+  R.sum.1 = sum(x.1.ranks)
+  return (R.sum.1)
+  }
+
+for (i in 1:B) {
+  rank.sum = computeRankSum(boot.data.type.I[i,],       
+                            boot.data.type.II[i,])   
+  num.larger = rank.sum - (n*(n+1))/2
+  pi.hats[i] = num.larger/(n*m)
+  }
+mean(pi.hats)
+sd(pi.hats)
+
+plot(density(pi.hats))
+
+stand.pi.hats = (pi.hats - mean(pi.hats))/sd(pi.hats)
+qqnorm(stand.pi.hats)
+abline(0,1, col="red")
+
+# Seems to match a normal fairly well expect in the tails (though that is the most uncertainregion of a probability plot
+
+```
+Queation 2
+(f):
+```{r}
+ranked.pi.hats <- sort(pi.hats)
+(quant.05 <- ranked.pi.hats[500])
+(quant.95 <- ranked.pi.hats[9500])
+
+(percentile.CI <- c(quant.05, quant.95))
+```
+
+Question 3 (Based on Rice 11.25):
+
+(a):
+if the smallest observation for method B is made arbitrarily small, then the mean of method B decreases, so the difference between the two means increases。 But the variance of method B will be increasing if the smallest value decreases, and the change of the variance is more efficient than change of the diff.mean. So the t-test is likely to decrease, therefore is less likely to reject.
+
+(b):
+if the largest observation increases, same as the above reason, that the t-test would be less likely to reject. Also, once the largest observation from method B increases to a level that the difference between mean of Method A and mean of Method B becomes zero, so the t-test will not reject.
+
+(c):
+When we apply Mann Whitney test, we only look at the rank of the data, not the data itself. The smallest value for Method B has rank 1. Its rank will not be affected no matter how we change the value, so the Mann Whitney test will keep the same. 
+The largest value though, has rank 11.5. Its rank will be increased and finally reach 21. The rank sum will be changed from 51 to 60.5. It mostly depends on the significance level we choose to use, so it may or may not influence the Mann Whitney test results.
+
+
+
+
+Question 4 (Based on Rice 11.36):
+
+```{r}
+
+#(a):
+data = data.frame(micro=c(97.2, 105.8, 99.5, 100, 93.8, 79.2, 72,
+                         72, 69.5, 20.5, 95.2, 90.8, 96.2, 96.2, 91),
+                  hydro=c(97.2, 97.8, 96.2, 101.8, 88, 74, 75, 67.5, 65.8, 21.2, 94.8, 95.8, 98, 99, 100.2))
+
+data
+
+
+micro.mean <- mean(data$micro)
+hydro.mean <- mean(data$hydro)
+
+n <- length(data$micro)
+(diff <- micro.mean - hydro.mean)
+diffs <- data$micro-data$hydro
+
+mean(diffs)
+
+Sd_diff <- sqrt(var(diffs)/n)
+Sd_diff
+
+
+
+
+#(b): 
+# if paring has been ignored
+b <- sqrt(1/length(data$micro)+1/length(data$hydro))
+micro1 <- (length(data$micro)-1)*var(data$micro)
+hydro1 <- (length(data$hydro)-1)*var(data$hydro)
+denominator <- length(data$micro)+length(data$hydro)-2
+
+Sd_diff_1 <- b*sqrt((micro1+hydro1)/denominator)
+#Sd_diff_1 <- b * sqrt((length(data$micro)-1)*var(data$micro)+(length(data$hydro)-1)*var(data$hydro)/(length(data$micro)+length(data$hydro)-2))
+Sd_diff_1 
+
+
+# (c):
+# to test the two motheds:
+
+(mean(diffs)/Sd_diff)
+(mean(diffs)/Sd_diff_1)
+
+
+# the standard deviation is higher when we ignore the paring (7.805 compared to 1.196).But the tests statistic of 0.367998 and 0.05637193 are both quite small. So, there is no systematic difference between the two methods though, since
+```
+
+
