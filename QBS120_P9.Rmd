@@ -1,0 +1,250 @@
+---
+title: "QBS120_P9"
+output: html_document
+---
+
+QBS 120_P9
+Author: Claire Wang
+
+Problem 1 (a): test the $H_0$ of no difference in the mean for the seven levels
+```{r}
+SD <- sqrt(0.0037)
+sim.batches <- replicate(1000,matrix(rnorm(7*10, mean = 4, sd = SD)))
+sim.batches <- as.data.frame(sim.batches)
+dim(sim.batches)
+lab <- as.data.frame(sapply(1:7, function(x) {
+  rep(x, 10)}))
+lab <- unlist(lab)
+
+# now we need to cbind sim.batches and lab for each simulation (1000 times)
+p.value <- matrix(0,1000)
+for (i in 1:1000){
+  data <- as.data.frame(cbind(sim.batches[,i], lab))
+  p <- summary(aov(sim.batches[,i]~ lab, data))[[1]][["Pr(>F)"]][1]
+  p.value[i,] <- p
+}
+head(p.value, n=10L)
+plot(density(p.value))
+power.test <- length(which(p.value<0.05))/1000
+power.test
+
+# the p values are generally above the standard significance level, alpha = 0.05, and we fail to reject the null hypothesis. 
+```
+
+Problem 1 (b):
+```{r}
+rank.p = sort(p.value)
+u.order.stats <- (1:length(p.value))/(length(p.value)+1)
+par(mar=c(4,4,1,1))
+plot(u.order.stats,rank.p, xlab="i/(n+1)", ylab="U(0,1)")
+abline(0,1,col="red")
+#qqPlot(p.value, y=NULL, distribution="unif")
+```
+Problem 1 (c): The distribution match my expectation. The p-values are close to the uniform distribution. The density plot shown above also indicates a uniform distribution.
+
+
+Problem 1 (d): 
+if p-value is less than or equal to 0.05, we could reject the null hypothesis. We are supposed to find the # of simulations when p-value = 0.05. It matches my expectation since there should be very few p-values that is less than or equal to 0.05 from the density plot in 1(a).
+```{r}
+alpha <- 0.05
+length(which(p.value <= alpha))
+# this relatively 
+```
+
+Problem 1 (e):  applying Bonferroni method, adjusted $p_{adj} = mp_{raw}$. It matches the expectation that after we adjust the p-values using Bonferroni method, the number of statistically significant p-values could be reduced to 0 since there arent many of them.
+```{r}
+min(p.value)
+bonf.p.vals = p.adjust(p.value, method="bonferroni")
+(R.bonf = length(which(bonf.p.vals <= alpha)))
+```
+
+Problem 1 (f): Similarly, it matches the expectation since adjusted p-values will be reduced. 0 p-value would be possible.
+```{r}
+hochberg.p.vals = p.adjust(p.value, method="hochberg")
+(R.hochberg = length(which(hochberg.p.vals <= alpha)))
+
+
+#hommel.p.vals = p.adjust(p.value, method="hommel")
+#(R.hommel = length(which(hommel.p.vals <= alpha)))
+```
+
+
+
+Problem 2 (a):
+Would choose FWER for experiment A, and FDR for experiment B. Experiment A has a small number of m1, and FDA is likely to reject all the alternative hypothesis, so use FWER for A.
+For B, use FDR, because m1 is very large, FDR would provide more balanced relationship between power and type 1 error.
+
+problem 2 (b):
+For FWER, choose Hochberg or Hommel over others, both work fine. It is because Holmmel should always be preferred to Bonferroni and other methods.
+
+Problem 2 (c):
+For FDR, choose Benjamini & Hochberg because it is a standard choice. The hypotheses are independent due to randomly selected genes
+
+Problem 2 (d): 
+in experiment a, do 1000 columns
+
+m0 is rnorm(m0,mu, 1)
+m1 10 DE's
+
+do cbind
+
+t.test to all the columns (TA is doing rbind)
+
+apply() on each column
+```{r}
+# n = 50, so sampling size for M0 and M1 is 25
+M0.normal <- as.data.frame(replicate(990, matrix(rnorm(25, mean = 0.5, sd = 1))))
+
+M0.DE <- as.data.frame(replicate(10, matrix(rnorm(25, mean = 0.5, sd = 1))))
+
+M1.normal <- as.data.frame(replicate(990, matrix(rnorm(25, mean = 0.5, sd = 1))))
+M1.DE <-as.data.frame(replicate(10, matrix(rnorm(25, mean = 1.75, sd = 1))))
+
+M0 <- cbind(M0.normal, M0.DE)
+M1 <- cbind(M1.normal, M1.DE)
+
+
+p.values <- matrix(0,1000,1)
+for (i in 1:1000){
+  p.values[i] <- t.test(M0[,i],M1[,i])$p.value
+}
+
+
+
+```
+
+Problem 2 (e): 
+It is consistent with the global null hypothesis, that it is approximately a uniform distribution
+```{r}
+hist(p.values, main = "Distribution of p-values",breaks=40)
+```
+
+Problem 2 (f):
+It matches the expectation, that again here the significant p-values are as less as 68, therefore when we apply FWER methods, the amount of adjusted significant p-values could be reduced to 1
+```{r}
+length(which(p.values <= 0.05))
+
+bonf.p.vals.DE = p.adjust(p.values, method="bonferroni")
+(R.bonf = length(which(bonf.p.vals.DE <= 0.05)))
+
+holm.p.vals.DE = p.adjust(p.values, method="holm")
+(R.holm = length(which(holm.p.vals.DE <= 0.05)))
+
+hochberg.p.vals.DE = p.adjust(p.values, method="hochberg")
+(R.hochberg = length(which(hochberg.p.vals.DE <= 0.05)))
+
+emp.power.bonf = length(which(bonf.p.vals.DE <= 0.05))/1000
+emp.power.holm = length(which(holm.p.vals.DE <= 0.05))/1000
+emp.power.hochberg = length(which(hochberg.p.vals.DE <= 0.05))/1000
+avg.emp.power <- mean(c(emp.power.bonf,emp.power.holm,emp.power.hochberg))
+avg.emp.power
+```
+
+
+Problem 2 (g):
+It matches my expectation. BH method has more rejections than FWER methods, and BY method has significant p-values between FWER and BH method
+```{r}
+bh.p.vals.DE = p.adjust(p.values, method="BH")
+(R.bh = length(which(bh.p.vals.DE <= 0.05)))
+
+by.p.vals.DE = p.adjust(p.values, method="BY")
+(R.by = length(which(by.p.vals.DE <= 0.05)))
+
+emp.power.bh = length(which(bh.p.vals.DE <= 0.05))/1000
+emp.power.by = length(which(by.p.vals.DE <= 0.05))/1000
+
+avg.emp.power1 <- mean(c(emp.power.bh,emp.power.by))
+avg.emp.power1
+```
+
+Problem 2 (h):
+Rejected fewer than non-weighted BH theoretically. But here the p-values are not large enough, therefore could not indicate the obvious difference.
+```{r}
+M <- rbind(M0,M1)
+gene.var = apply(M, 1, var)
+w = gene.var/mean(gene.var)
+w.p.vals = p.values/w
+wbh.p.vals = p.adjust(w.p.vals, method="BH")
+length(which(wbh.p.vals <= 0.05))
+
+
+
+```
+
+
+
+
+Problem 3 (a):
+```{r}
+allele <- matrix(c(12,4,39,49),ncol=2,byrow=TRUE)
+colnames(allele) <- c("Diabetic","Normal")
+rownames(allele) <- c("Bb or bb","BB")
+allele <- as.table(allele)
+allele
+fisher.test(allele)
+chisq.test(allele)
+```
+
+p value from fisher's exact test is 0.03034, from chi-squred test is 0.04698. Fisher's exact test would be more accurate if the sample size here is relatively small. Fisher's exact test is also non-parametric because it gives exact p-values. Chi-squared is parametric and supposed to be used when the sample size is large. With large sample size, their answers would be pretty similar.
+
+
+Problem 3 (b):
+Fisher's exact test would be more accurate if the sample size here is relatively small.
+It would be recommended to use Fisher's exact test when the sample size is less than 1000. Fisher is non-parametric because it is exact p-values. Chi-squared is parametric and give approximation
+
+
+
+
+
+Problem 4 (a):
+
+$Odds Ratio = \frac{12*49}{39*4}=3.77$
+
+
+Problem 4 (b):
+```{r}
+library(epitools)
+oddsratio.midp(allele, conf.level = 0.95)$measure[2]
+oddsratio.fisher(allele)$measure[2]
+oddsratio.wald(allele)$measure[2]
+oddsratio.small(allele)$measure[2]
+```
+Odd ratio from Wald method is 3.77, which is exactly the same as the OR from 3(a).
+
+Problem 4 (c): 
+The distribution of the random variable $\hat\delta = \frac{N_{11} N_{22}}{(16-N_{11})(88-N_{22})}$ is determined by the two binulmial distributions.
+$\hat \pi_{11}=12/16=0.75$, $\hat \pi_{22}=49/88=0.56$
+```{r}
+N11 <- rbinom(10000, size=12+4,prob = 0.75)
+N22 <- rbinom(10000, size=39+49,prob = 0.56)
+
+#estimate the odds ratio due to the estimated variables
+delta <- (N11*N22)/((16-N11)*(88-N22))
+plot(density(delta), main = "Distribution of Estimated Odds Ratio")
+```
+
+
+Problem 4 (d):
+
+```{r}
+quantile(delta, probs = c(0.025, 0.975))
+fisher.test(allele)
+oddsratio(allele)
+
+```
+The CI's are different. There are some p values= infinity in my delta arrays. This is because N11 have the probability of being as high as 16, same as N22 being as high as 88. That would lead to the infinite odds ratios. 
+fisher.test() and oddsratio() would eliminate the effect of Infinite values, therefore their p-values are lower than the CI from the quantile method.
+
+
+
+
+
+
+```{r}
+x <- replicate(1000,matrix(rnorm(7*10, mean = 4, sd = 0.05), nrow = 10, ncol=7))
+dim(x)
+x[,,1]
+```
+
+
+
