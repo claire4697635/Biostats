@@ -1,0 +1,109 @@
+---
+title: "QBS121_hw5"
+output: html_document
+---
+
+# QBS 121 Hw 5
+
+
+```{r}
+library(Matrix)
+library(lme4)
+library(nlme)
+library(car)
+library(MASS)
+```
+
+
+```{r}
+# correlation plot
+panel.cor <- function(x,y,digits=2, prefix="",cex.cor,...)
+{
+  usr <- par("usr"); 
+  on.exit(par(usr))
+  par(usr = c(1,0,1,0))
+  r <- abs(cor(x,y))
+  txt <- format(c(r,0.123456789),digits=digits)[1]
+  txt <- paste(prefix,txt,sep="")
+  if(missing(cex.cor))
+    cex.cor <- 0.8/strwidth(txt)
+  text(0.5,0.5,txt,cex=cex.cor * r)
+}
+
+```
+
+## Linear mixed effect model:
+
+data description:
+For each of 9 intertidal areas (denoted ‘Beaches’), the researchers sampled five sites (denoted ‘Sites’) and at each site they measured abiotic variables and the diversity of macro-fauna (e.g. aquatic invertebrates). Here, species richness refers to the total number of species found at a given site while NAP ( i.e. Normal Amsterdams Peil) refers to the height of the sampling location relative to the mean sea level and represents a measure of the amount of food available for birds, etc.
+
+The clustered outcome(dependent variable) here is Richness at given sites. Covariate here is NAP, since NAP is what the researchers measured uring the experiment. The plan here is to fit beaches as the random effect, since the 9 intertidal areas here seem to be randomly assigned to the sites. The fixed effect is just the analysis of the association between richness and NAP, similar to the basic lm analysis.
+```{r}
+rikz <- read.delim("https://uoftcoders.github.io/rcourse/data/rikz_data.txt")
+rikz$Beach <- as.factor(rikz$Beach)
+str(rikz)
+
+head(rikz)
+
+
+# plot the graphs based on lm
+o.lm <- lm(Richness ~ NAP, rikz)
+par(mfrow=c(2,2))
+plot(o.lm)
+
+
+# The correlation plots
+pairs(rikz, lower.panel=panel.smooth,upper.panel=panel.cor)
+title("chart of correlation matrix", line=3)
+
+
+
+# random intercept model
+library(lmerTest)
+o.lmer <- lmer(Richness ~ NAP + (1|Beach), rikz, REML = FALSE)
+summary(o.lmer)
+
+# random intercept slope model
+o.lmer.slope <- lmer(Richness ~ NAP + (1+NAP|Beach), rikz, REML = FALSE)
+summary(o.lmer.slope)
+```
+The Normal Q-Q plot suggests that the distribution model is not precisely normal, but we could still treat it as approximately linear model.
+
+To interpret the results, under the random effects part from the random intercept model, the variance of the effect of beach is 7.507, which is a good sign as a random effect (not 0); under the fixed effects part, the p values are all significant. It indicates that the increase of one unit of  NAP would decrease the richness of the species by 2.5757 unit of length.
+
+There is a correlation of fixed Effects in the random intercept slope model, which estimates the correlation between the intercept and slope variances, here is -0.164.
+
+
+## GLMM analysis for binary mixed models:
+
+Lung cancer dataset description: A variety of outcomes were collected on patients, who are nested within doctors, who are in turn nested within hospitals. There are also a few doctor level variables, such as Experience that we will use in our example.
+
+The binary outcome(dependent variable) here is remission. Covariates here are Age, BMI, CancerStage, and LengthofStay since they seem the common covaraite candidates for any outcomes we are interested in predicting. Later on we found out that Age and BMI are not correlated to remission due to their high p-values though. The plan here is to fit DID as the random effect, since the patients are assigned to doctors randomly. The fixed effect is the same as basic lm analysis of the association between richness and Age, BMI, CancerStage, and LengthofStay.
+```{r}
+hdp <- read.csv("https://stats.idre.ucla.edu/stat/data/hdp.csv")
+hdp <- within(hdp, {
+  Married <- factor(Married, levels = 0:1, labels = c("no", "yes"))
+  DID <- factor(DID)
+  HID <- factor(HID)
+})
+
+head(hdp)
+
+# CancerStage is a patient level categorical predictor (I, II, III, or IV), LengthofStay is the patient level continuous predictors, DID is the random intercept by doctor ID.
+o.glmer <- glmer(remission ~ Age + BMI + CancerStage + LengthofStay +
+    (1 | DID), data = hdp, family = binomial(link=logit))
+summary(o.glmer)
+
+
+plot(o.glmer)
+
+pairs(hdp[,c("Age", "BMI", "CancerStage", "LengthofStay", "DID")], lower.panel=panel.smooth,upper.panel=panel.cor)
+title("chart of correlation matrix", line=3)
+
+```
+The random effects part tells us the variance of the Doctor ID is 4.116, which is a good sign as it is not zero.
+
+We can see that the p values for Age and BMI are not significant, meaning there is no strong association between Age and remission, as well as BMI and remission. The p values of cancer stages as well as length of stay are significant, which indicates the association between remission and cancer stages as well as length of stay in this experiment under the random effect, doctor ID. Take cancer stage II for example, the increase of one unit of cancer stage II would decrease the remission by 0.397418 unit of length.
+
+The correlation matrix plot presents the slopes which indicates that the correlations between the covariates are not highly correlated (could be due to that the dataset is relatively large, so we can't see the distribution of the data points in each chunk clearly).
+
