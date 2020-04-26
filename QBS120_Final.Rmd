@@ -1,0 +1,551 @@
+---
+title: "QBS120_Final"
+output: html_document
+---
+
+QBS 120 Final
+
+Author: Claire Wang
+
+
+
+Problem 1:
+
+(a): 
+Random variables are functions from sample space $\Omega$, the set of all possible outcomes corresponding to an experimet, to the real numbers.
+
+A discrete RV is an RV that can take on a finite or countably infinite number of values (one-to-one correspondence with integers), which indicates that a sample space with the discrete RVs has finite or countably infinite number of outcomes.
+
+A continuous RV is an RV that can take on a continuum of values (e.g., any real number between 0 and 1). A sample space with the continuous RVs has infinite as well as not countable outcomes.
+
+(b):
+The observed value 3.1 represents a measurement which is determined by the outcome of a ststistical experiment, therfore it is a random variable.
+
+(c):
+The average annual revenue here is not a random variable, but a constant. It is because the group of regional hospitals is fixed, so when the researchers compute the average annual revenue in 2018, they are calculating the sum of the total revenue in 2018 from each hospital divided by the number of the hospitals, which are both the fixed numbers. And when they repeat the calculation, the average annual revenue would be the same answer. 
+
+(d):
+if the average revenue is estimated using a single randomly selected hospital, the estimate is a RV. Because the average revenue is estimated from a randomly selected hospital out of the whole group of the hospitals. 
+Assume the probability of each hospital being selected is identical, then the probability of gettig the average revenue from hospital A is $P_X(X=A)$.
+
+(e):
+$E[X_1 + X_2] = E[X_1]+E[X_2] = \mu_1 + \mu_2$
+
+$E[X_1|X_2] = E[X_1] = \mu_1$, since $X_1$ and $X_2$ are independent RVs.
+
+$E[X_1^2] = Var(X_1) + (E[X_1])^2 = \sigma_1^2 + \mu_1^2$
+
+$Var(X_1+X_2) = Var(X_1)+ Var(X_2) + 2Cov[X_1,X_2] = Var(X_1)+ Var(X_2) = \sigma_1^2 + \sigma_2^2$, since when $X_1$ and $X_2$ are independent RVs, their covariance is 0.
+
+$Var(X_1|X_2)= Var(X_1) = \sigma_1^2$, since $X_1$ and $X_2$ are independent RVs.
+
+$F_{X_1}^{-1}(F_{X_1}(\mu_1)) = \mu_1$
+
+$E[\mu_1 \mu_2] = \mu_1 \mu_2$
+
+$Var(\sigma_1^2/ \sigma_2^2) = 0$
+
+
+(f):
+$E[Y_1 + Y_2]= E[Y_1]+E[Y_2] = \mu_1 + \mu_2$
+
+** $E[Y_1|Y_2] = \mu_1 +\rho \frac{\sigma_1}{\sigma_2}(Y_2 - \mu_2)$, it is a linear function of $Y_2$.
+
+$E[Y_1^2] = Var(Y_1) + (E[Y_1])^2 = \sigma_1^2 + \mu_1^2$
+
+$Var(Y_1+Y_2) = Var(Y_1)+ Var(Y_2) + 2Cov[Y_1,Y_2] = \sigma_1^2 + \sigma_2^2 + 2\rho \sigma_1 \sigma_2$
+
+$Var(Y_1|Y_2) = (1-\rho^2)\sigma_1^2$: 
+
+
+
+$Var(X_1/2 +\mu_2) = \frac{1}{4}Var(X_1) = \frac{1}{4}\sigma_1^2$
+
+$1-F_{X_1}(\mu_1) = 0.5$
+
+$F_{X_2}^{-1}(0.5) = \mu_2$
+
+
+
+
+Problem 2: 
+
+(a): An estimator $\hat \theta$ for parameter $\theta$ is a random variable. In other words, an estimate of $\theta$ will be a function of X1, X2, . . . , Xn and will hence be a random variable with a probability distribution called its sampling distribution.
+
+(b): A population parameter $\theta$ is a fixed constant, that is, it is not a random variable. Paramters are descriptive measures of an entire population.
+
+(c): if an estimator $\hat \theta$ is unbiased, the expectation of the estimator will be close to the true population parameter $\theta$: $E(\hat \theta) = \theta$.
+
+(d): 
+1). When the bias is quite small and the reduction in variance is quite large, the biased estimate performs substantially better than an unbiased estimate.
+2). When an unbiased estimator does not exist without further assumptions about a population or is difficult to compute, we choose the biased estimator.
+3). When a biased estimator gives a lower value of some loss function (particularly mean squared error, MSE) compared with unbiased estimators.
+4). When an estimator is biased but consistent, we would choose it over an estimator which is unbiased but not consistent
+We could think about the reason in terms of consistency and efficiency.
+
+(e):
+$\hat \theta$ is said to be consistent in probability if $\hat \theta$ converges in probability to $\theta$ as n approaches infinity; that is, for any $\epsilon >0$, $P(|\hat \theta - \theta|>\epsilon) \to 0$, as $n \to \infty$.
+
+(f):
+If a consistent estimator is not unbiase, we would choose another consistent estimator for the same parameter.
+
+(g):
+If we generate multiple random samples and compute the $100(1-\alpha)%$ CI for $\theta$ in each of the sample, $100(1-\alpha)%$ of the convidence intervals would correctly bracket the true value $\theta$.
+
+
+(h):
+The endpoints of a $100(1-\alpha)$ confidence interval are random variables since the confidence intervals are computed from random samples and provide a probabilistic interval for a population parameter.
+
+(i):
+Given observed values $X_i = x_i$, where i = 1,...,n, the likelihood of $\theta$ as a function of $x_1$,$x_2$,...,$x_n$ is defined as $lik(\theta) = f(x_1,x_2,...,x_n|\theta)$.
+The maximum likelihood estimate (mle) of $\theta$ is that value of $\theta$ that maximizes the likelihood—that is, makes the observed data “most probable” or “most likely.”
+
+Central limit theorem: the sampling distributions will have a normal distribution with a mean that is equal to the population mean $\mu$, and variance $\sigma^2/n$ as $n \to \infty$.
+
+(j): 
+1. Define the likelihood function: $L(\theta|x) = f(x|\theta)$
+2. Find the value of $\theta$ that maximizes the likelihood for the observed data (i.e., set derivative to 0 and solvefor $\theta$, ensure it is a max): $\hat \theta_{mle} = maxL(\theta|x)$
+3. $\hat \theta_{mle}$ is the maximum likelihood estimate(MLE)
+4. Mathematically, it is usually much easier to maximize thelog of this function: $l(\theta|x) = \sum log[f(x_i|\theta)]$
+
+ambiguity: maximum likelihood estimates can be heavily biased for small samples. The optimality properties may not apply for small samples.
+Unless$N \gg n$, a finite population correction is needed for the variance of $\bar X$.
+
+(k):
+If $\bar X$ converges in probability to the true value of the parameter,population mean $\mu$, as the sample size tends to infinity.
+
+(l):
+It is a shifted normal distribution above or below the x-axis by distance of c (depending on sign of c). The curve itself have the same shape with $N(n\mu, n\sigma^2)$
+
+If the $X_i$ are not normal but are independent, some versions of CLT can apply to non-identically distributed RVs, but S cannot converge to a normally-distributed limit(ignore the constant c for a sec). Therefore S will not approach a normal distribution.
+
+
+
+
+
+Problem 3:
+
+(a):
+A composite hypothesis does not specify the distribution completely, however simple hypothesis specifies the distribution completely.
+When a simple null hypothesis is required to be tested in consultation with a composite alternative, the power associated with the test tends to be a function pertaining to a parameter of interest.
+Variation in power can be experienced due to the size of the sample.
+
+(b):
+Null hypothesis $H_0$: $\mu_1 = \mu_2$
+Alternative hypothesis: $\mu_1 \neq \mu_2$.
+
+(c):
+The sampling distribution of the test statistic under $H_0$ is called null hypothesis and is required to compute the type I error rate.
+
+(d):
+Type I error rate (or significance level) is theprobability of making a type I error: $\alpha = P(reject H_0|H_0)$
+
+Type II error rate is probability of making a type IIerror: $\beta = P(accept H_0|H_A)$
+
+Power is the probability of rejecting $H_0$ when it is false: $1-\beta = P(reject H_0|H_A)$
+
+(e):
+sample size N, effect size $\Delta$, standard deviation $\sigma$, and type I error rate $\alpha$ are needed to estimate the power. So the sampling distribution is not enough for us to estimate the power.
+
+(f):
+A p-value is defined as the probability of encountering a test statistic equal to or larger than theobserved statistic assuming $H_0$ is true.
+
+(g):
+to obtain perfect type I error, we can always accept $H_0$. In this case, we never have any type I errors so $\alpha = 0$. Unfortunately, power for this test is also 0.
+
+to obtain perfect type II error, we can lways reject $H_0$. In this case, we never have any type II errors so $\beta= 0$ and power is 1.  Unfortunately, the type I error rate for this test is 1.
+
+(h):
+Define "important" as we would rather see it happens. (e.g., we would rather to see Type I error happen and will call it more important than Type II error.) 
+When the null hypothesis might be harmful including the clinical assumptions such as breast cancer won't appear in males, it would be save to reject it rather than accept it, then type I error becomes more important than type II error. Verse versa, if the alternative hypothesis could be harmful, then we would rather accept the null hypothesis, then type II error becomes more important.
+
+(i):
+If the result is correlated, then significant differences were found. From a one-sample t test, we then are able to reject the null hypothesis assume $\mu_1 - \mu_2 =0$. But here the one-sample t test indicates that the null hypothesis is failed to be rejected. then the significance level that is settled, which is also the type I error rate, is too low. So it is harder to reject the null hypothesis.
+
+
+
+(j): 
+FWER is the probability of committing at least one type I error: $Pr(V>0)$. For m total hypotheses that are tested, the null hypothesis is rejected for $a$ of those hypotheses. 
+FDR is the expected proportion of type I errors among all rejections, i.e.,$E[FDP]$. For m total hypotheses that are tested, the null hypothesis is rejected for $a$ of those hypotheses. But since FDR has greater power, it tends to reject more null hypothesis and is more possible to reject $b$ the true hypothesis among the $a$ rejected hypotheses compared to FWER.
+
+(k):
+FWER is very similar to FDR if $m_1$ is small.
+
+(l):
+It would be better to apply FWER over FDR confirmatory studies and small $m_1$. FDR is better for exploratory analyses and large $m_1$.
+
+
+
+
+
+Problem 4: 
+```{r}
+sim.vals <- matrix(runif(100*1000, min = 2, max = 4), nrow = 1000, ncol = 100)
+#sim.vals[1,100]
+
+T <- matrix(0,1000,1)
+
+for (i in 1:1000){
+  sim.vals[i,] <- sort(sim.vals[i,])
+  T[i] <- sim.vals[i,100]/sim.vals[i,1]
+}
+
+
+plot(density(T), main = "Density of the distribution for T")
+
+
+approx.cdf <- ecdf(T)
+plot(approx.cdf)
+
+# or
+library(sfsmisc)
+ecdf.ksCI(T)
+
+p.val <- 1-pt(T, df=1)
+
+
+# estimte the probability: problem set 7, 2 (d), Problem set 5, 4 (d)
+
+(est.prob <- length(which(T >= 1.99))/length(T))
+```
+
+
+
+Problem 5:
+the  sample  mean  is  asymptotically  normal  with  mean $μ$ and  variance $\sigma^2/n$
+```{r}
+exp.data <- c(11,8,9,7,14,5,10,12,13,6,11,13,13,10,11,9,9,11,12,11,8,10,11,10,7,11,6,10,9,11,10,9,13,12,10,7,10,6,12,7,11,8,14,11,11,13,8,9,11,11,10,9,7,16,6,10,8,9,8,7,10,10,12,11,9,10,9,7,9,10,9,9,9,8,9,13,8,10,8,11,10,10,14,10,11,11,14,10,9,17,8,13,8,13,6,9,11,12,13,12)
+
+# (a):
+n=length(exp.data)
+mean.ci.low =mean(exp.data) - sd(exp.data) * qnorm(0.975)/sqrt(n)
+mean.ci.high =mean(exp.data) + sd(exp.data) * qnorm(0.975)/sqrt(n)
+
+(CI.95 <-c(mean.ci.low,mean.ci.high))
+
+mean(exp.data)
+var(exp.data)
+
+#(b):
+# basic method 
+computeBootstrapDist <- function(data, estimator, B=10000) {        
+        bootstrap.data = matrix(sample(data, B*n, replace=TRUE), nrow=B, ncol=n)
+        bs.estimates <- apply(bootstrap.data, 1, function(x) {                 estimator(x)
+          })
+        return (bs.estimates)
+}
+bs.mean <- computeBootstrapDist(exp.data, function(x){mean(x)})
+se.mean <- sd(bs.mean)
+
+
+computeBootstrapCI = function(bs.values, estimate, ci.percent=.9, B=10000) {
+  bs.values = sort(bs.values)
+  (quant.low = bs.values[B*(1-ci.percent)/2])
+  (quant.high = bs.values[B*(ci.percent + (1-ci.percent)/2)])
+  bs.ci.low = 2*estimate - quant.high
+  bs.ci.high = 2*estimate - quant.low
+  return (c(bs.ci.low,bs.ci.high))
+}
+
+(bootstrap.basic.ci <- computeBootstrapCI(bs.mean, mean(exp.data)))
+
+
+#(c):
+# percentile method
+B <- 10000
+ci.025 = sort(bs.mean, decreasing=F)[B*0.025]
+ci.975 = sort(bs.mean, decreasing=F)[B*0.975]
+(bootstrap.percentile.ci <- c(ci.025,ci.975))
+```
+Problem 5 (d):
+The the asymptotic normal, basic bootstrap and percentile bootstrap 95% CIs are close to each other. Specifically, the asymptotic normal CI interval is slightly larger than the percentile bootstrap method CI, then the percentile bootstrap method CI interval is slightly larger than the basic method CI interval.
+It matches my expectation, because Asymptotic coverage probabilities of bootstrap percentile confidence intervals for constrained parameters. And there is narrowness bias of percentile CIs
+
+
+Problem 5 (e):
+```{r}
+# simulate asymptotic normal distribution of mean which I didn't do previously
+library(base)
+sd.asy <- sqrt(var(exp.data/length(exp.data)))
+asy.mean <- rnorm(10000, mean=10.03, sd = sd.asy)
+
+# density plot
+plot(density(bs.mean),ylim = c(0,17))
+lines(density(asy.mean), lty="dashed")
+
+
+# qq plot
+#qq.data <- sort(c(bs.mean, asy.mean))
+#qqplot(qq.data, pch=20);
+#abline(0,1,col="red")
+qqplot(bs.mean, asy.mean)
+abline(0,1,col="red")
+
+```
+The bootstrap distribution visually does not match the asymptotic normal distribution.
+Problem 5 (f):
+```{r}
+stand.bs.mean = (bs.mean - mean(bs.mean))/sd(bs.mean)
+ks.test(stand.bs.mean, y="pnorm", alternative = "two.sided")
+```
+P value here is 0.004806, way less than 0.05. so it indicates a strong evidence to reject the null hypothesis. The null hypothesis is that this asymptotic normal distribution fits the bootstrap distribution.
+
+
+Problem 5 (g):
+The data should be a normal distribution with mean $\mu = 10.03$, variance $\sigma^2=5.10$
+```{r}
+
+mean(exp.data)
+var(exp.data)
+sd.exp <- sd(exp.data)
+sim.data <- rnorm(10000, mean=10.03, sd = sd.exp)
+
+# density plot
+plot(density(exp.data))
+lines(density(sim.data), lty="dashed")
+
+# qq plot
+qqplot(exp.data, sim.data)
+abline(0,1,col="red")
+
+# ks test
+stand.sim.mean = (sim.data - mean(sim.data))/sd(sim.data)
+ks.test(stand.sim.mean, y="pnorm", alternative = "two.sided")
+```
+
+
+Problem 6:
+(a):
+```{r}
+sim.matrix.2 <- replicate(1000,matrix(rnorm(2*2, mean = 0, sd = 1),nrow=2,ncol=2))
+
+sim.matrix.2[,,1]
+
+sim.matrix.3 <- replicate(1000,matrix(rnorm(3*3, mean = 0, sd = 1),nrow=3, ncol=3))
+sim.matrix.4 <- replicate(1000,matrix(rnorm(4*4, mean = 0, sd = 1),nrow=4,ncol=4))
+sim.matrix.5 <- replicate(1000,matrix(rnorm(5*5, mean = 0, sd = 1),nrow=5,ncol=5))
+sim.matrix.6 <- replicate(1000,matrix(rnorm(6*6, mean = 0, sd = 1),nrow=6,ncol=6))
+sim.matrix.7 <- replicate(1000,matrix(rnorm(7*7, mean = 0, sd = 1),nrow=7, ncol=7))
+sim.matrix.8 <- replicate(1000,matrix(rnorm(8*8, mean = 0, sd = 1),nrow=8, ncol=8))
+sim.matrix.9 <- replicate(1000,matrix(rnorm(9*9, mean = 0, sd = 1),nrow=9,ncol=9))
+sim.matrix.10 <- replicate(1000,matrix(rnorm(10*10, mean = 0, sd = 1),nrow=10,ncol=10))
+
+cov.matrix.2 <- replicate(1000,matrix(0,nrow=2,ncol=2))
+eigen.matrix.2 <- matrix(0,nrow = 2, ncol=1000)
+cov.matrix.3 <- replicate(1000,matrix(0,nrow=3,ncol=3))
+eigen.matrix.3 <- matrix(0,nrow = 3, ncol=1000)
+cov.matrix.4 <- replicate(1000,matrix(0,nrow=4,ncol=4))
+eigen.matrix.4 <- matrix(0,nrow = 4, ncol=1000)
+cov.matrix.5 <- replicate(1000,matrix(0,nrow=5,ncol=5))
+eigen.matrix.5 <- matrix(0,nrow = 5, ncol=1000)
+cov.matrix.6 <- replicate(1000,matrix(0,nrow=6,ncol=6))
+eigen.matrix.6 <- matrix(0,nrow = 6, ncol=1000)
+cov.matrix.7 <- replicate(1000,matrix(0,nrow=7,ncol=7))
+eigen.matrix.7 <- matrix(0,nrow = 7, ncol=1000)
+cov.matrix.8 <- replicate(1000,matrix(0,nrow=8,ncol=8))
+eigen.matrix.8 <- matrix(0,nrow = 8, ncol=1000)
+cov.matrix.9 <- replicate(1000,matrix(0,nrow=9,ncol=9))
+eigen.matrix.9 <- matrix(0,nrow = 9, ncol=1000)
+cov.matrix.10 <- replicate(1000,matrix(0,nrow=10,ncol=10))
+eigen.matrix.10 <- matrix(0,nrow = 10, ncol=1000)
+
+sum.eigen.2 <- matrix(0,1,1000)
+sum.eigen.3 <- matrix(0,1,1000)
+sum.eigen.4 <- matrix(0,1,1000)
+sum.eigen.5 <- matrix(0,1,1000)
+sum.eigen.6 <- matrix(0,1,1000)
+sum.eigen.7 <- matrix(0,1,1000)
+sum.eigen.8 <- matrix(0,1,1000)
+sum.eigen.9 <- matrix(0,1,1000)
+sum.eigen.10 <- matrix(0,1,1000)
+
+for (i in 1:1000){
+cov.matrix.2[,,i] <- cov(sim.matrix.2[,,i])
+eigen.matrix.2[,i] <- eigen(cov.matrix.2[,,i])$values
+sum.eigen.2[,i] <- sum(eigen.matrix.2[,i])
+
+cov.matrix.3[,,i] <- cov(sim.matrix.3[,,i])
+eigen.matrix.3[,i] <- eigen(cov.matrix.3[,,i])$values
+sum.eigen.3[,i] <- sum(eigen.matrix.3[,i])
+
+cov.matrix.4[,,i] <- cov(sim.matrix.4[,,i])
+eigen.matrix.4[,i] <- eigen(cov.matrix.4[,,i])$values
+sum.eigen.4[,i] <- sum(eigen.matrix.4[,i])
+
+cov.matrix.5[,,i] <- cov(sim.matrix.5[,,i])
+eigen.matrix.5[,i] <- eigen(cov.matrix.5[,,i])$values
+sum.eigen.5[,i] <- sum(eigen.matrix.5[,i])
+
+cov.matrix.6[,,i] <- cov(sim.matrix.6[,,i])
+eigen.matrix.6[,i] <- eigen(cov.matrix.6[,,i])$values
+sum.eigen.6[,i] <- sum(eigen.matrix.6[,i])
+
+cov.matrix.7[,,i] <- cov(sim.matrix.7[,,i])
+eigen.matrix.7[,i] <- eigen(cov.matrix.7[,,i])$values
+sum.eigen.7[,i] <- sum(eigen.matrix.7[,i])
+
+cov.matrix.8[,,i] <- cov(sim.matrix.8[,,i])
+eigen.matrix.8[,i] <- eigen(cov.matrix.8[,,i])$values
+sum.eigen.8[,i] <- sum(eigen.matrix.8[,i])
+
+cov.matrix.9[,,i] <- cov(sim.matrix.9[,,i])
+eigen.matrix.9[,i] <- eigen(cov.matrix.9[,,i])$values
+sum.eigen.9[,i] <- sum(eigen.matrix.9[,i])
+
+cov.matrix.10[,,i] <- cov(sim.matrix.10[,,i])
+eigen.matrix.10[,i] <- eigen(cov.matrix.10[,,i])$values
+sum.eigen.10[,i] <- sum(eigen.matrix.10[,i])
+}
+
+plot(density(sum.eigen.2),"Densities of eigen sums")
+lines(density(sum.eigen.5),lty="dashed",col="blue")
+lines(density(sum.eigen.10),lty="dashed",col="red")
+```
+It matches my expectation. As n goes larger, the sampling distributionsum of the eigenvalues(sample means here) approaches a normal distribution as the sample size gets larger. We can see, the distribution with n=10 looks most likely a normal distribution, and the distribution with n=2 looks least likely a normal distribution.
+
+Problem 6 (b):
+```{r}
+sim.cor.2 <- matrix(0,nrow=1000, ncol=2)
+sim.cor.3 <- matrix(0,nrow=1000, ncol=3)
+sim.cor.4 <- matrix(0,nrow=1000, ncol=4)
+sim.cor.5 <- matrix(0,nrow=1000, ncol=5)
+
+for (i in 1:1000){
+  sim.cor.2[i,] <- eigen.matrix.2[,i]
+  sim.cor.3[i,] <- eigen.matrix.3[,i]
+  sim.cor.4[i,] <- eigen.matrix.4[,i]
+  sim.cor.5[i,] <- eigen.matrix.5[,i]
+}
+
+(cor.2 <- cor(sim.cor.2))
+(cor.3 <- cor(sim.cor.3))
+(cor.4 <- cor(sim.cor.4))
+(cor.5 <- cor(sim.cor.5))
+```
+Since each correlation matrix does not have element whose value is 0, the eigenvalues are dependent.
+
+Problem 6 (c):
+if the CLT holds for the sum of eigenvalues, a standardized version of this sum is a standard normal distribution:
+```{r}
+# take n=10 for example,
+stand.sum.10 <- (sum.eigen.10 - mean(sum.eigen.10))/sd(sum.eigen.10)
+plot(density(stand.sum.10))
+qqnorm(stand.sum.10)
+abline(0,1,col="red")
+```
+
+Problem 6 (d):
+It matches my expectation except in the tails. But it could be n=5 is not large enough. As shown above, when n=10, the standardized sums fit better into a standard normal distribution
+```{r}
+stand.sum.5 <- (sum.eigen.5 - mean(sum.eigen.5))/sd(sum.eigen.5)
+plot(density(stand.sum.5))
+qqnorm(stand.sum.5)
+abline(0,1,col="red")
+```
+
+
+Problem 6 (e):
+```{r}
+stand.sum.2 <- (sum.eigen.2 - mean(sum.eigen.2))/sd(sum.eigen.2)
+stand.sum.3 <- (sum.eigen.3 - mean(sum.eigen.3))/sd(sum.eigen.3)
+stand.sum.4 <- (sum.eigen.4 - mean(sum.eigen.4))/sd(sum.eigen.4)
+stand.sum.6 <- (sum.eigen.6 - mean(sum.eigen.6))/sd(sum.eigen.6)
+stand.sum.7 <- (sum.eigen.7 - mean(sum.eigen.7))/sd(sum.eigen.7)
+stand.sum.8 <- (sum.eigen.8 - mean(sum.eigen.8))/sd(sum.eigen.8)
+stand.sum.9 <- (sum.eigen.9 - mean(sum.eigen.9))/sd(sum.eigen.9)
+stand.sum.10 <- (sum.eigen.10 - mean(sum.eigen.10))/sd(sum.eigen.10)
+
+p.val <- matrix(0,9.1)
+p.val[1] <- ks.test(stand.sum.2, y="pnorm", alternative = "two.sided")$p.value
+p.val[2] <- ks.test(stand.sum.3, y="pnorm", alternative = "two.sided")$p.value
+p.val[3] <- ks.test(stand.sum.4, y="pnorm", alternative = "two.sided")$p.value
+p.val[4] <- ks.test(stand.sum.5, y="pnorm", alternative = "two.sided")$p.value
+p.val[5] <- ks.test(stand.sum.6, y="pnorm", alternative = "two.sided")$p.value
+p.val[6] <- ks.test(stand.sum.7, y="pnorm", alternative = "two.sided")$p.value
+p.val[7] <- ks.test(stand.sum.8, y="pnorm", alternative = "two.sided")$p.value
+p.val[8] <- ks.test(stand.sum.9, y="pnorm", alternative = "two.sided")$p.value
+p.val[9] <- ks.test(stand.sum.10, y="pnorm", alternative = "two.sided")$p.value
+
+log.pval <- -log(p.val)
+x <- seq(2,10)
+plot(x,log.pval)
+```
+It matches my expectation. As n increase, CLT works more precisely to the sum distributions, meaning increasing p-values (which is harder to reject the null hypothesis that it is not a standard normal distribution). As p increases, -log(p values) decreases (except for n=2 since p-value equals 0).
+
+
+
+
+
+
+
+
+
+Problem 7:
+(a):
+I don't see any obvious outliers in this dataset, and the arithmetic mean, median, and trimmed mean look pretty close and appropriate in the density plot, so a robust estimator would not be necessary in this dataset.
+```{r}
+library(datasets)
+data(chickwts)
+summary(chickwts)
+
+mean.chick <- mean(chickwts[,1])
+median.chick <- median(chickwts[,1])
+trimmed.chick <- mean(chickwts[,1], trim=0.1)
+
+plot(density(chickwts[,1]), main = "Density of chicken wings")
+abline(v=mean.chick, col="red")
+abline(v=median.chick, col="blue")
+abline(v=trimmed.chick, col="yellow")
+
+plot(chickwts[,1])
+```
+
+Problem 7 (b):
+With a p-value that is smaller than the significance level $\alpha = 0.05$, we can reject the null hypothesis that the mean weight does not vary according to the type of feed.
+```{r}
+aov(chickwts$weight ~ chickwts$feed, chickwts)
+summary(aov(chickwts$weight ~ chickwts$feed, chickwts))
+```
+
+Problem 7 (c):
+Similar to 7 (b), with a p-value that is smaller than the significance level $\alpha = 0.05$, we can reject the null hypothesis that the mean weight does not vary according to the type of feed.
+```{r}
+kruskal.test(chickwts$weight, chickwts$feed)
+```
+Problem 7 (d):
+The kruskal-Wallis test has a larger p-value compared to aov test. The smaller the p-value, the stronger the evidence that you should reject the null hypothesis. It is because the kruskal-Wallis test (a non parametric method) has a lack of efficiency relative to aov test (a parametric method). So the result matches my expectation.
+
+Problem 7 (e):
+Using pairwise.t.test, we can see that the pairs who have significantly different means are: casein&horsebean, casein&linseed, casein&soybean, horsebean&meatmeal, horsebean&soybean, horsebean&sunflower, linseed&sunflower, soybean&sunflower. 
+8 pairs of feed types have significantly different mean weights with the pairwise t test.
+```{r}
+pairwise.t.test(chickwts[,1],chickwts[,2])
+
+
+# first generate 15 p-value
+p.vals <- matrix(0,15,1)
+p.vals[1] = t.test(chickwts$weight[1:10],chickwts$weight[11:22])$p.value
+p.vals[2] = t.test(chickwts$weight[1:10],chickwts$weight[23:36])$p.value
+p.vals[3] = t.test(chickwts$weight[1:10],chickwts$weight[37:48])$p.value
+p.vals[4] = t.test(chickwts$weight[1:10],chickwts$weight[49:59])$p.value
+p.vals[5] = t.test(chickwts$weight[1:10],chickwts$weight[60:71])$p.value
+p.vals[6] = t.test(chickwts$weight[11:22],chickwts$weight[23:36])$p.value
+p.vals[7] = t.test(chickwts$weight[11:22],chickwts$weight[37:48])$p.value
+p.vals[8] = t.test(chickwts$weight[11:22],chickwts$weight[49:59])$p.value
+p.vals[9] = t.test(chickwts$weight[11:22],chickwts$weight[60:71])$p.value
+p.vals[10] = t.test(chickwts$weight[23:36],chickwts$weight[37:48])$p.value
+p.vals[11] = t.test(chickwts$weight[23:36],chickwts$weight[49:59])$p.value
+p.vals[12] = t.test(chickwts$weight[23:36],chickwts$weight[60:71])$p.value
+p.vals[13] = t.test(chickwts$weight[37:48],chickwts$weight[49:59])$p.value
+p.vals[14] = t.test(chickwts$weight[37:48],chickwts$weight[60:71])$p.value
+p.vals[15] = t.test(chickwts$weight[49:59],chickwts$weight[60:71])$p.value
+
+alpha <- 0.05
+bonf.p.vals = p.adjust(p.vals, method="bonferroni")
+(R.bonf = length(which(bonf.p.vals <= alpha)))
+
+bh.p.vals = p.adjust(p.vals, method="BH")
+(R.bh = length(which(bh.p.vals <= alpha)))
+```
+These results match my expectations. The significant p-values from pairwise t test is 8, from bonferroni is 7, and from BH is 10. 
+It is because when we apply FWER method, the amount of adjusted significant p-values could be reduced. On the other hand, BH method has substantially more rejections than FWER methods, therefore the significant p-values will be more than FWER method.
