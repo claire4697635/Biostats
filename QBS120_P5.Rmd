@@ -1,0 +1,384 @@
+---
+title: "QBS120_P5"
+author: "Claire Wang"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+QBS 120 HW 5
+
+
+Problem 1 (corrected version)
+
+(a): lecture 9, page 22, 50, 53(answer for a)
+
+For an iid normal sample, set the partial derivative wrt μ equal to 0 and solve to get the $\hat{μ_{mle}}$
+the MLE of $\mu$ is: $\hat{\mu_{mle}} = \bar{X}=-1.129$,
+
+noted that $\hat{\mu_{mle}} \sim N(\mu, \frac{\sigma^2}{n})$
+```{r}
+library(multtest)
+library(ggpubr)
+data("golub")
+#View(golub)
+
+golubb <- as.data.frame(golub)
+gene <- t(golubb[1,])
+gene1 <- as.data.frame(gene)
+gene1_new <- as.numeric(unlist(gene1))
+
+mean(gene1_new)
+length(gene1_new)
+sigmasqrd <- var(gene1_new)
+sigmasqrd
+#sigma^2
+```
+(b): 
+if $E[\hat\mu_{mle}] = \mu$, then it is unbiased
+it is unbiased
+
+
+(c):
+lecture 39
+$\hat{\mu_{mle}}=-1.129$
+
+Apply the weak law of large numbers, the estimator $\hat \mu_{mle} \to \mu$ in probability, which is $P(|\hat\mu_{mle_n} - \mu| > \epsilon) \to 0$ as $n \to infty$
+
+according to chebyshev's inequality, we need to show that if $E[\hat\mu_{mle_n} - \mu]^2$ converges to 0 as $n \to \infty$
+
+then it is consistent
+
+(d):
+Yes, $\bar X$ is an unbiased and consistent estimator for the expected value of iid RVs regard-less of the distribution.
+
+(e):
+Plug  $\hat{\mu_{mle}}$ into the partial derivative wrt $\sigma$, set equal to 0 and solve to get $\hat \sigma_{mle}$
+
+finally we will have $\sigma^2_{mle} = \frac{1}{n} \sum (x_i - \bar x)^2$
+
+
+(f):
+No, the MLE for $\sigma^2$ is not unbiased.  The unbiased estimator uses $\frac{1}{n-1}$ rather than $\frac{1}{n}$.  However, the MLE is asymptotically unbiased, i.e., asn→ ∞,1/(n−1)→1/n.All MLEs are asymptotically unbiased.
+
+(g):
+Yes, it is consistent.  This follows from being an MLE and MOM estimator.
+
+(h):
+Yes, it is still a valid (though biased) estimator of the variance of iid RVs.  In the generalcase, it is the MOM estimator but not necessarily the MLE.
+
+(i):
+For normal iid RVs, ˆμmle= ̄X∼N(μ,σ2/n).  If the data is not normally distributed, ̄Xconverges in distribution toN(μ,σ2/n).
+
+
+(j):
+The mean squared error (MSE) of an estimator is defined asMSE(ˆθ) =V ar(ˆθ)+(ˆθ−θ)2or  the  variance  of  the  estimator  plus  the  squared  bias.   In  this  case,  the  estimator  isunbiased so the MSE of ˆμmleis just the variance orσ2/n.  For gene 1 in Golub, we don’tknow the true variance but can estimate the MSE using our estimate ofσ2
+
+
+
+(k):
+```{r}
+library(multtest) 
+data(golub)
+gene1.values = golub[1,]
+(mu.mle = mean(gene1.values))
+(z = qnorm(0.975))
+
+varMLE = function(x, mle=T) {
+  x.bar = mean(x)
+  squared.diffs = (x-x.bar)^2
+  if (mle) {
+    var.est = mean(squared.diffs)
+    } else {
+      var.est = sum(squared.diffs)/(length(x)-1)
+      }
+  return (var.est)
+  }
+(var.mle = varMLE(gene1.values, mle=T))
+(n = length(gene1.values))
+
+(lower.ci = mu.mle - qnorm(0.975)*sqrt(var.mle/n))
+(upper.ci = mu.mle + qnorm(0.975)*sqrt(var.mle/n))
+```
+
+Problem 2 (Based on Rice 8.3):
+(a):
+according to poisson distribution, 
+
+$\hat \lambda_i = \bar X_i$
+
+$\hat \lambda_1=\frac{\sum X_i}{n} =\frac{0+128+2*37+3*18+4*3+5*1}{400}=0.6825$
+
+
+$\hat \lambda_2=\frac{\sum X_i}{n} =\frac{0+143*1+98*2+42*3+8*4+4*5+2*6}{400}=1.3225$
+
+$\hat \lambda_3=\frac{\sum X_i}{n} =\frac{0+103*1+121*2+54*3+30*4+13*5+2*6+1*7+1*9}{400}=1.8000$
+
+$\hat \lambda_4=\frac{\sum X_i}{n} =\frac{0+20*1+43*2+53*3+86*4+70*5+54*6+37*7+18*8+10*9+5*10+2*11+2*12}{400}=4.6300$
+
+
+(bcde):
+standard deviation = $\frac{1}{N} \sum (x_i - \lambda_i)^2$
+```{r}
+
+# MLE of lamdas
+yeast.counts=data.frame(cells=0:12,
+          concen.1 <-c(213,128,37,18,3,1,0,0,0,0,0,0,0),
+          concen.2 <-c(103,143,98,42,8,4,2,0,0,0,0,0,0),
+          concen.3 <-c(75,103,121,54,30,13,2,1,0,1,0,0,0),
+          concen.4 <-c(0,20,43,53,86,70,54,37,18,10,5,2,2))
+
+MLE_lambda <- function(nofcell, nofsquare) {
+		return (sum(nofcell*nofsquare)/sum(nofsquare))
+	}
+	lamda1.mle <- MLE_lambda(yeast.counts$cells, yeast.counts$concen.1)
+	lamda2.mle <- MLE_lambda(yeast.counts$cells, yeast.counts$concen.2)
+	lamda3.mle <- MLE_lambda(yeast.counts$cells, yeast.counts$concen.3)
+	lamda4.mle <- MLE_lambda(yeast.counts$cells, yeast.counts$concen.4)
+	
+	lamda1.mle
+	lamda2.mle
+		lamda3.mle
+		lamda4.mle
+		
+
+	# theoretical SE of lambdas is:
+		#Var(lambda) = 1/n^2 * n * mu = mu / n, mu = X_bar = lambda
+		n = 400
+theo_SD_1 <- sqrt(lamda1.mle/n)
+theo_SD_2 <- sqrt(lamda2.mle/n)
+theo_SD_3 <- sqrt(lamda3.mle/n)
+theo_SD_4 <- sqrt(lamda4.mle/n)
+
+theo_SD_1
+theo_SD_2
+theo_SD_3
+theo_SD_4
+		
+# parametric bootstrap
+samples1 <- rpois(n, lambda = lamda1.mle)
+samples2 <- rpois(n, lambda = lamda2.mle)
+samples3 <- rpois(n, lambda = lamda3.mle)
+samples4 <- rpois(n, lambda = lamda4.mle)
+
+hats_SD_1 <- sd(samples1)
+hats_SD_2 <- sd(samples2)
+hats_SD_3 <- sd(samples3)
+hats_SD_4 <- sd(samples4)
+
+hats_SD_1
+hats_SD_2
+hats_SD_3
+hats_SD_4
+
+# 95% CI estimates
+	left_CI_1 = lamda1.mle + qnorm(.025)*sqrt(lamda1.mle/n)
+	right_CI_1 = lamda1.mle + qnorm(.975)*sqrt(lamda1.mle/n)
+	left_CI_2 = lamda2.mle + qnorm(.025)*sqrt(lamda2.mle/n)
+	right_CI_2 = lamda2.mle + qnorm(.975)*sqrt(lamda2.mle/n)
+	left_CI_3 = lamda3.mle + qnorm(.025)*sqrt(lamda3.mle/n)
+	right_CI_3 = lamda3.mle + qnorm(.975)*sqrt(lamda3.mle/n)
+	left_CI_4 = lamda4.mle + qnorm(.025)*sqrt(lamda4.mle/n)
+	right_CI_4 = lamda4.mle + qnorm(.975)*sqrt(lamda4.mle/n)
+	
+	
+# Compare observed and expected counts.
+ovse1 = data.frame(observed=yeast.counts$concen.1, 
+	                   expected=round(400*dpois(yeast.counts$cells, lamda1.mle)))	
+ovse1
+
+	
+ovse2 = data.frame(observed=yeast.counts$concen.2, 
+                  expected=round(400*dpois(yeast.counts$cells, lamda2.mle)))	
+ovse2
+	
+ovse3 = data.frame(observed=yeast.counts$concen.3, 
+                     expected=round(400*dpois(yeast.counts$cells, lamda3.mle)))	
+ovse3
+	
+ovse4 = data.frame(observed=yeast.counts$concen.4, 
+                 expected=round(400*dpois(yeast.counts$cells, lamda4.mle)))	
+ovse4
+```
+
+
+
+
+
+
+(d):
+$CI_1=(0.6825-1.96\sqrt{\frac{0.6825}{400}},0.6825+1.96\sqrt{\frac{0.6825}{400}}) = (0.601,0.763)$
+
+
+$CI_2=(1.3225-1.96\sqrt{\frac{1.3225}{400}},1.3225+1.96\sqrt{\frac{1.3225}{400}}) = (1.210,1.435)$
+
+$CI_3=(1.8-1.96\sqrt{\frac{1.8}{400}},1.8+1.96\sqrt{\frac{1.8}{400}}) = (1.669,1.931)$
+
+$CI_4=(4.63-1.96\sqrt{\frac{4.63}{400}},4.63+1.96\sqrt{\frac{4.63}{400}}) = (4.419,4.841)$
+
+
+
+
+
+
+
+Problem 3 (Based on Rice 8.9):
+The mean itself is a number, with one trial of the random sample measurement from the population. We could measure it with a large amount of times to get different means, which could finally build a probability distribution.
+
+It is already mentioned in the example that if the experiment were to repeat, the counts(estimate) would not be exactly the same. It is because each count is from a random sample of the population.
+
+
+
+Problem 4 (Based on Rice 8.13):
+
+(a):
+In 8.4 example D, it is an angular distribution with density function: $f(x|\alpha) = \frac{1+\alpha x}{2}$, $-1 \leqslant x \leqslant 1$ and $-1 \leqslant \alpha \leqslant 1$ 
+
+where $x = \cos(\theta)$
+
+$E[\hat\alpha]=E[3\bar X] = 3E[\bar X]$
+$E[\bar X] = E[X_i] = \int_{-1}^1 x \frac{1+\alpha x}{2} dx = \frac{\alpha}{2}\frac{1}{3} [x^3]_{-1}^1 = \frac{1}{3}\alpha$
+
+then $3E[\bar X] = \alpha$, therefore $E[\hat\alpha] = \alpha$.
+
+As a result, the estimate is unbiased
+
+
+(b):
+for i.i.d, $Var[\bar X] = \frac{Var[X_i]}{n}$
+
+$Var[X_i] = E[X^2] - E[X]^2 = \int_{-1}^1 x^2 \frac{1+\alpha x}{2} dx - (\frac{\alpha}{3})^2 = \frac{\alpha}{2}\frac{1}{4}[x^4]_{-1}^1 -\frac{\alpha^2}{9}= \frac{3-\alpha^2}{9}$
+
+so, $Var(\hat \alpha) = Var(3\bar X) = \frac{9Var(X_i)}{n} = \frac{3 - \alpha^2}{n}$
+
+
+(c):
+$Var(\hat \alpha) = \frac{(3-1^2)}{20}=$
+
+$P(\alpha > 0.5) = 1- P(Z < \frac{0.5-\alpha}{\sqrt{\frac{3-\alpha^2}{n}}}) = 1 - P(Z < -1.58) = 1- \Phi(-1.58) $, with $n=20$ and $\alpha = 1$
+
+
+
+
+
+
+
+Problem 5 (Based on Rice 8.58):
+(a):
+Here, $n = total = 10+68+112 = 190$, $r = 3$, $n_1 = 10$, $n_2 = 68$, $N_3 = 112$
+
+maximize the log-likelihood:
+
+$0 = -\frac{2n_1+n_2}{1-\theta}+\frac{2n_3+n_2}{\theta}$
+
+$\hat \theta_{mle} = \frac{2n_3+n_2}{2n_1+2N_2+2n_3} = \frac{2*112+68}{2*190} = 0.7684$
+
+
+(b):
+$Var(\hat \theta_{mle}) \to \frac{1}{n I(\theta_0)}$ with probability
+
+$\frac{1}{nI(\theta_0)} = -\frac{1}{E[l''(\theta_0)]}$
+
+$l''(\theta_0) = [-\frac{2n_1+n_2}{1-\theta}+\frac{2n_3+n_2}{\theta}]' = -\frac{2n_1+n_2}{(1-\theta)^2}-\frac{2n_3+n_2}{\theta^2}$
+
+(I used $n_i$'s to represent the element corresponding to X_i's. So later on I will go back to use $X_i$'s instead of $n_i$'s when calculatin expectation values)
+
+$E[l''(\theta_0) ] = -\frac{1}{(1-\theta)^2}(E[2X_1]+E[X_2]) - \frac{1}{\theta^2}(E[2X_3]+E[X_2])$
+
+$E[X_1] = n(1-\theta^2)$
+$E[X_2] = 2n\theta(1-\theta)$
+$E[X_3] = n\theta^2$
+
+so $E[l''(\theta_0) ] = -\frac{1}{(1-\theta)^2} (2n(1-\theta^2)+2n\theta(1-\theta)) - \frac{1}{\theta^2}(2n\theta^2+2n\theta(1-\theta)) = -\frac{1}{1-\theta}2n\theta-2n -2n-\frac{1}{\theta}2n(1-\theta) = \frac{2n}{\theta(1-\theta)}$
+
+therefore, $Var(\hat \theta_{mle}) = \frac{\theta(1-\theta)}{2n} = \frac{0.7684(1-0.7684)}{2*190} = 0.00046843$
+
+
+(c):
+the 99% CI for $\hat \theta_{mle}$ is:
+$(\hat \theta_{mle} - \frac{z(\alpha/2)}{\sqrt{I(\hat \theta_{mle})}}, \hat \theta_{mle} + \frac{z(\alpha/2)}{\sqrt{I(\hat \theta_{mle})}})$
+
+$\alpha = 0.01$, $\hat \theta_{mle} = 0.7684$,
+we can calculate $z(\alpha/2)$ as:
+
+```{r}
+-qnorm(0.01/2)
+```
+
+$I(\hat\theta_{mle})= -E[-\frac{2n_1+n_2}{(1-\theta)^2}-\frac{2n_3+n_2}{\theta^2}]$,
+
+and $I(\hat\theta_{mle}) = \frac{2n}{\hat\theta_{mle}(1-\hat\theta_{mle})} = \frac{190*2}{0.7684(1-0.7684)} = 2135.2940$
+
+then $(0.7684 - \frac{2.5758}{\sqrt{2135.2940}}), 0.7684 + \frac{2.5758}{\sqrt{2135.2940}} = (0.7143,0.8241)$
+
+
+(d):
+
+use $\hat \theta_{mle} = 0.7684$ as $\theta$
+$p_1 = (1-\theta^2) = (1-0.7684)^2 = 0.0536$
+$p_2 = 2\theta(1-\theta) = 0.3559$
+$p_3 = \theta^2 = 0.5904$
+
+```{r}
+randomsamples <- rmultinom(10000, size =190, 
+	prob=c(0.0536, 0.3559, 0.5904))
+randomsamples[,1:10]
+thetaMLE <- function(n1, n2, n3) {
+  return((2*n3 + n2)/(2*(n1+n2+n3)))
+}
+theta.hats = apply(randomsamples, 2, function(x){
+  return(thetaMLE(x[1], x[2], x[3]))
+})
+theta.hats[1:5]
+var(theta.hats) # which equals to what we have in (b)
+
+# now plot the parametric booootstrap distribution
+plot(density(theta.hats))
+
+
+# and plot asymptotic distribution
+# first simulate the x values on the approx same range as the bootstrap distribution
+x <- seq(from=0.6, to=0.9, by=0.001)
+
+var.theta.hat = (0.7684*(1-0.7684))/(2*190)
+
+asym.density = dnorm(x, mean=0.7684, sd=sqrt(var.theta.hat))
+
+lines(x, asym.density, lty="dashed", col="blue")
+```
+
+
+
+
+(e):
+
+$Var(\theta_{mle}) =  0.00046843$ for asymptoxic variance
+
+the parametric bootstrap variance is $0.0004691151$ from 5(d)
+
+
+they are quite close to each other
+
+
+(f):
+
+```{r}
+randomsamples <- rmultinom(10000, size =190, 
+	prob=c(0.0536, 0.3559, 0.5904))
+randomsamples[,1:10]
+thetaMLE <- function(n1, n2, n3) {
+  return((2*n3 + n2)/(2*(n1+n2+n3)))
+}
+theta.hats = apply(randomsamples, 2, function(x){
+  return(thetaMLE(x[1], x[2], x[3]))
+})
+
+# now we need to find the 99% CI quantiles
+
+(theta.005 = sort(theta.hats, decreasing=F)[50])
+(theta.995 = sort(theta.hats, decreasing=F)[9950])
+
+
+```
+
+which is very close to what we have in (c)
