@@ -1,0 +1,219 @@
+---
+title: "QBS 122 Assignment 5"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+### 2.11 Q5:
+
+Posterior distribution as a compromise between prior information and data: let y be the number of heads in n spins of a coin, whose probability of heads is $\theta$.
+
+#### (a):
+
+Since it's a matter of coin problem, the probability distribution is a binomial distribution. We use $y \sim Bin(n,\theta)$, which we will have: 
+$$p(y = k|\theta) = Bin(y|n,\theta) =  {n \choose k} \theta ^y (1-\theta)^{n-y}$$
+
+Additionally, given that the prior distribution for $\theta$ is uniform on the range [0,1]:
+$$p(y=k)={n \choose k} \int_0^1 \theta^k (1-\theta)^{n-k} d\theta$$
+
+Now according to $\theta \sim Beta(k_1, n-k+1)$, we get 
+$$\int_0^1 p(\theta) = \frac{\Gamma (n+2)}{\Gamma (k+1) \Gamma(n-k+1))} \int_0^1 
+\theta^k (1-\theta)^{n-k} d\theta$$, which $\int_0^1 p(\theta) = 1$
+
+So, 
+$$\int_0^1 \theta^k (1-\theta)^{n-k} d\theta = \frac{\Gamma (k+1) \Gamma(n-k+1))}{\Gamma (n+2)}$$
+
+Plug it back in we get:
+
+$$p(y=k)={n \choose k} \frac{\Gamma (k+1) \Gamma(n-k+1))}{\Gamma (n+2)}$$
+
+If we want to simply the answer:
+
+$$p(y=k) = \frac{n!}{k!(n-k!)} \frac{k! (n-k)!}{(n+1)!} = \frac{n!}{(n+1)!} = \frac{1}{n+1}$$
+
+
+#### (b):
+
+for a uniform distribution, $\alpha=\beta=1$.
+
+Given $\theta \sim Beta(\alpha, \beta)$, we have $p(\theta) \propto \theta ^ {\alpha - 1} (1-\theta)^{\beta - 1}$.
+
+since $y|\theta \sim Bin(n,\theta)$, we have 
+$$p(y| \theta) \propto \theta^y (1-\theta)^{n-y} \propto \theta^{y+\alpha-1}\theta^{n-y+\beta-1} \propto Beta(\theta|\alpha+y,\beta+n-y)$$
+we want to find that the posterior mean $\frac{\alpha+y}{\alpha+\beta+n}$ lies between $\frac{\alpha}{\alpha+\beta}$ and $\frac{y}{n}$
+
+Assume $\frac{y}{n} > \frac{\alpha}{\alpha+\beta}$,
+
+let's first evaluate $\frac{y}{n}  - \frac{\alpha+y}{\alpha+\beta+n} = \frac{y(\alpha+\beta) -\alpha n}{n(\alpha+\beta+n)} =\frac{2y-n}{n(2+n)} >0$, 
+
+Similarly, $\frac{\alpha+y}{\alpha+\beta+n} - \frac{\alpha}{\alpha+\beta} = \frac{2y -n}{(2+n)2} > 0$
+
+Or, we could find that the posterior mean can be expressed by the two predicted boundaries as below:
+
+$$\frac{\alpha+y}{\alpha+\beta+n} = \frac{\alpha}{\alpha+\beta}\frac{\alpha+\beta}{\alpha+\beta+n} + \frac{y}{n}\frac{n}{\alpha+\beta+n}$$
+
+It exposes a relationship of $\frac{\alpha+y}{\alpha+\beta+n} = x \frac{\alpha}{\alpha+\beta} + (1-x) \frac{y}{n}$, which indicates that $\frac{\alpha+y}{\alpha+\beta+n}$ lies between the two. 
+
+
+#### (c):
+from (b) we get $p(y| \theta) \propto \theta^y (1-\theta)^{n-y} \propto Beta(\theta | y+1, n-y+1)$
+
+we get $Var(\theta|y) = \frac{(y+1)(n-y+1)}{(n+2)^2(n+3)}$
+
+$(y+1)(n-y+1) = -y^2+ny+(n+1)$， derive the nominator to get the maximum result, we have $-2y+n =0$, $y=\frac{n}{2}$.
+
+so $\frac{(y+1)(n-y+1)}{(n+2)^2(n+3)} \leqslant \frac{(n/2 +1)(n-n/2+1)}{(n+2)^2(n+3)} = \frac{(n/2+1)^2}{(n/2+1)^2 4(n+3)} = \frac{1}{4(n+3)} \leqslant \frac{1}{16}$ since $n_{min} = 1$
+
+additionally, $Var(\theta) =\frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)} = \frac{1}{(2)^2(3)}  =\frac{1}{12}$, so $Var(\theta|y) < Var(\theta)$
+
+
+
+#### (d):
+
+Now, if the prior distribution is a beta distribution: $p(\theta) \propto \theta^{\alpha -1}(1-\theta)^{\beta -1}$, with $Var(\theta) = \frac{\alpha \beta}{(\alpha+\beta)^2(\alpha+\beta+1)}$
+
+the posterior: $p(\theta|y) \propto \theta^{y+\alpha-1} (1-\theta)^{n-y+\beta-1} \propto Beta(\theta|\alpha+y, \beta+n-y)$, with $Var(\theta|y) = \frac{(\alpha+y)(\beta+n-y)}{(\alpha+\beta+n)^2(\alpha+\beta+n+1)}$
+
+if posterior variance is greater than prior variance, we have 
+$$\frac{\alpha \beta}{(\alpha+\beta)^2(\alpha+\beta+1)} < \frac{(\alpha+y)(\beta+n-y)}{(\alpha+\beta+n)^2(\alpha+\beta+n+1)}$$
+we need to find a set of $\alpha$, $\beta$, n and y to satisfy the above situation:
+
+One possible solution could be $\alpha = 2$, $\beta = 13$, $y=8$, $n=10$.
+
+with these, the prior variance = 0.000996, the posterior variance = 0.00923
+
+
+### 2.11 Q6
+we have $y|\theta \sim Poisson(\theta)$, the prior distribution is $\theta \sim Gamma(\alpha, \beta)$
+
+we need to derive the posterior distribution and evaluate its mean and variance using the two formulas:
+
+$E[u] = E[E[u|v]]$, and $Var(u) = E(Var(u|v)) +Var(E(u|v))$.
+
+we get $E[\theta] = E[E[\theta|y]]$, and $Var(\theta) = E[Var(\theta|y)] + Var(E[\theta|y])$, and we have $E(\theta) = \frac{\alpha}{\beta}$, and $Var(\theta) = \frac{\alpha}{\beta^2}$
+
+we can get 
+$$E(y) = E[E(y|\theta)] = E(\theta) = \frac{\alpha}{\beta}$$
+
+$$Var(y) =E(Var(y|\theta)) + Var(E[Y|\theta]) = E(\theta) + Var(\theta) = \frac{\alpha}{\beta} +\frac{\alpha}{\beta^2} $$
+
+
+
+
+### 2.11 Q8:
+
+#### (a):
+
+$\tau_0^2 = 40^2$, $\sigma^2 = 20^2$, $y_0=180$, $\bar y = 150$
+
+the posterior: $y|\theta \sim N(\theta,\frac{20^2}{n})$
+
+the prior: $\theta \sim N(180, 40^2)$
+
+then $p(\theta|y) = N(\theta|\mu_n, \tau^2)$, where $\mu_n=\frac{\frac{1}{\tau_0^2}\mu_0 + \frac{n}{\sigma^2}\bar y }{\frac{1}{\tau_0^2}+\frac{n}{\sigma^2}}$, with $\frac{1}{\tau^2} = \frac{1}{\tau_0^2}+\frac{n}{\sigma^2}$
+
+so $$\theta|y \sim N(\frac{\frac{1}{40^2}180 + \frac{n}{20^2}150}{\frac{1}{40^2}+\frac{n}{20^2}}, \frac{1}{\frac{1}{40^2}+\frac{n}{20^2}})$$
+
+
+#### (b):
+similarly as (a), the posterior predictive distribution for $\tilde{y}$ is:
+
+$\tilde y|\bar y  \sim N(\frac{\frac{1}{40^2}180 + \frac{n}{20^2}150}{\frac{1}{40^2}+\frac{n}{20^2}}, \frac{1}{\frac{1}{40^2}+\frac{n}{20^2}} + 20^2)$
+
+
+
+#### (c):
+$$E[\tilde y|\bar y] = E[E(\tilde y |\theta, \bar y)| \bar y ] = E[\theta|\bar y] = \mu_n$$
+
+$$Var[\tilde y|\bar y] = E[Var(\tilde y|\theta, \bar y)|\bar y] + Var[E(\tilde y|\theta, \bar y )| \bar y] = E[\sigma^2|\bar y]+Var(\theta|\bar y ) = \sigma^2 + \tau^2$$
+
+To get a 95% posterior interval for $\theta$, we have  $E[\theta| \tilde y = 150] \pm 1.96 \sqrt{Var(\theta|\bar y = 150)}$
+
+when n = 10, we have $$E[\theta| \tilde y = 150] = \mu_n = \frac{\frac{1}{\tau_0^2}\mu_0 + \frac{n}{\sigma^2}\bar y }{\frac{1}{\tau_0^2}+\frac{n}{\sigma^2}} = \frac{\frac{1}{40^2}180 + \frac{10}{20^2}150}{\frac{1}{40^2}+\frac{10}{20^2}} = 150.73$$
+
+and $$Var(\theta|\bar y = 150) = \tau^2 = \frac{1}{ \frac{1}{\tau_0^2}+\frac{n}{\sigma^2}} = \frac{1}{\frac{1}{40^2}+\frac{10}{20^2}} = 39.02$$ 
+
+
+$\theta$ is $150.73 \pm 1.96 \sqrt{39.02} = 150.73 \pm 1.96* 6.25$, then the 95% posterior interval is $(138.48, 162.98)$.
+
+
+Similarly, the 95% predictive interval for $\tilde y$ is $E[\tilde y| \tilde y = 150] \pm 1.96 \sqrt{Var(\tilde y|\bar y = 150)}$
+
+$E[\tilde y| \tilde y = 150] = 150.73$, and $$Var(\tilde y|\bar y = 150) = \sigma^2 + \tau^2 = \sigma^2 + \frac{1}{ \frac{1}{\tau_0^2}+\frac{n}{\sigma^2}} = 20^2 + \frac{1}{\frac{1}{40^2}+\frac{10}{20^2}} = 439.02$$ 
+
+
+we get $E[\tilde y| \tilde y = 150] \pm 1.96 \sqrt{Var(\tilde y|\bar y = 150)} = 150.73 \pm 1.96* \sqrt{439.02} = 150.73 \pm 1.96 * 20.95$
+
+then then 95% predictive interval for $\tilde y$ is $(109.67, 191.79)$
+
+
+#### (d):
+
+if n = 100, plug n back in (c) we have the 95% posterior interval for $\theta$ is
+$150.075 \pm 1.96 * \sqrt{3.99} = 150.075 \pm 1.96 * 2.00$, which we get (146.16,154.00). 
+
+The 95% predictive interval for $\tilde y $ is $150.075 \pm 1.96 * \sqrt{403.99} = 150.075 \pm 1.96 * 20.10$, which we get (110.68,189.47).
+
+### 3.10 Q1: Binomial and multinomial models
+
+#### (a):
+
+assume the Dirichlet prior distribution for $\theta$ $p(\theta)$ is $Dirichlet(d_1,d_2,...,d_n)$, then the posterior distribution of $p(\theta|y) = Dirichlet(d_1+y_1, d_2+y_2,...)$.
+
+The marginal posterior distribution of $(\theta_1, \theta_2, 1-\theta_1-\theta_2)$ is also Dirichlet:
+
+$$p(\theta_1,\theta_2|y) \propto \theta_1^{y_1+d_1-1} \theta_2^{y_2+d_2-1}(1-\theta_1-\theta_2)^{y_3+..+y_J+d_3+..+d_J-1}$$
+
+now if we treat $\alpha = \frac{\theta_1}{\theta_1+\theta_2}$, and $T = \theta_1+\theta_2$, then:
+
+$p(\alpha,T)|y \propto T(\alpha T)^{y_1+d_1-1} [(1-\alpha)T]^{y_2+d_2-1}=\alpha^{y_1+d_1-1}(1-\alpha)^{y_2+d_2-1}T^{y_1+y_2+d_1+d_2-1}$ 
+
+Integrate over T, we then found that 
+$p(\alpha,T|y) \propto Beta(\alpha|y_1+d_1,y_2+d_2)$
+
+since $\alpha$ and $\beta$ are independent, separating the relevant terms in the posterior density is duable as shown below:
+
+$\alpha|y \sim Beta(y_1+d_1,y_2+d_2)$
+
+#### (b):
+The marginal posterior distribution $Beta(y_1+d_1,y_2+d_2)$ is identical to the posterior distribution of $\alpha$ treating $y_1$ as an observation from the binomial distribution with probability $\alpha$ and sample size $y_1+y_2$ and ignoring $y_3,...y_J$.
+
+
+### 3.10 Q3
+
+#### (a):
+
+In the control group, the prior normal distribution gives that$p(y|\mu_c,\sigma_c^2) = \prod_1^{32} N(y_{control,i}|\mu_c,\sigma_c^2)$
+
+Similarly, in the treatment group, $p(y|\mu_t,\sigma_t^2) = \prod_1^{36} N(y_{treatment,i}|\mu_t,\sigma_t^2)$
+
+Given the uniform prior distribution, we can analyze the two groups separately since they are independent in the posterior distribution.  
+
+The posterior distribution of the control group $p(\mu_c,\log\sigma_c|y_{control}) = p(\mu_c,log\sigma_c) p (y|\mu_c, log\sigma_c) = \prod _1^{32} N(y_{control, i}|\mu_c,\sigma_c^2)$, so the posterior density for the control group, given the sample mean and standard devition, is: 
+$$\mu_c|y = t_{31} (1.013,\frac{0.24^2}{32})$$
+
+Similarly, the posterior distribution of the treatment group is $p(\mu_t,\log\sigma_t|y_{treatment}) = p(\mu_t,log\sigma_t) p (y|\mu_t, log\sigma_t) = \prod _1^{36} N(y_{treatment, i}|\mu_t,\sigma_t^2)$,
+
+and the posterior density for the treatment group is:
+
+$$\mu_t|y = t_{35}(1.173,\frac{0.20^2}{36})$$
+
+
+#### (b):
+
+to get the posterior distribution for the difference, $\mu_t-\mu_c$, since the two groups are independent, we can simply subtract the two means:
+```{r}
+# to get the posterior density of the difference:
+mu_c <- 1.013 + (0.24/sqrt(32))*rt(1000,31)
+mu_t <- 1.173 + (0.20/sqrt(36))*rt(1000,35)
+D <- mu_t - mu_c
+
+# plot the histogram
+hist (D, xlab="mu_t - mu_c",breaks=seq(-.1,.4,.02))
+
+# to get the 95% posterior interval, we need to find the 25th and 976th posterior difference from the 1000 simulation draws:
+print (sort(D)[c(25,976)])
+
+```
