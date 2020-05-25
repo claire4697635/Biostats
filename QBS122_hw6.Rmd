@@ -1,0 +1,479 @@
+---
+title: "QBS122 Assignment 6"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pten study data
+
+### 1)
+
+```{r}
+#Set-up: Load in libraries
+library(rjags)
+coda.options(combine.plots=TRUE,combine.stats=TRUE)
+
+#Read in Pten data
+Ptendata<-read.csv("PtenAnalysisData.csv",col.names=c("mouseid","FA","trt","SomaSize"), skip=1)
+hetvar=0 #Switches between homogeneous and heterogeneous models
+if (hetvar==1) {
+ JAGScode<-"PtenBayesHet.bug"
+ IC<-list(be=c(0, 0, 0, 0, 0), isigma=rep(0.05, 14), la = 100, itau=0.1)
+} else {
+ JAGScode<-"PtenBayes.bug"
+ IC<-list(be=c(0, 0, 0, 0, 0), isigma=0.05, la = 100, itau=0.1)	
+}
+
+
+#Define parameters and operating characteristics of MCMC procedure
+parameters = c("be", "th", "sigma", "la", "tau", "ICC")    # The parameter(s) to be monitored.
+adaptSteps = 500              # Number of steps to "tune" the samplers.
+burnInSteps = 20000            # Number of steps to "burn-in" the samplers.
+nChains = 3                   # Number of chains to run.
+numSavedSteps=150000           # Total number of steps in chains to save.
+thinSteps=1                   # Number of steps to "thin" (1=keep every step).
+nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains ) # Steps per chain.
+
+#Make an object for fitting model using JAGS
+jagsModel = model<-jags.model(JAGScode,data=Ptendata,inits=IC,n.chains=nChains)
+
+
+# Burn-in phase of model estimation:
+cat( "Burning in the MCMC chain...\n" )
+update( jagsModel , n.iter=burnInSteps )
+
+# Main phase of MCMC model: draws from the posterior distribution are saved in codaSamples
+cat( "Sampling final MCMC chain...\n" )
+codaSamples = coda.samples( jagsModel , variable.names=parameters ,
+                            n.iter=nIter , thin=thinSteps )
+# resulting codaSamples object has these indices:
+#   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]
+
+mcmcChain = as.matrix( codaSamples )
+summary(mcmcChain)
+
+```
+
+
+#### (a) 
+Evaluate the posterior probability that $\beta_4 > 5$
+```{r}
+be4 = mcmcChain[,"be[4]"]
+p1 = length(be4[be4>5])/length(be4)
+print(p1)
+
+# or 
+(prob_1a=mean(mcmcChain[,"be[4]"]>5))
+```
+
+
+
+#### (b) 
+Evaluate the posterior probability that $\beta_4 - \beta_5 > 5$
+```{r}
+(prob_1b=mean(mcmcChain[,"be[4]"]-mcmcChain[,"be[5]"]>0))
+```
+
+
+
+#### (c) 
+Evaluate the posterior probability that $I(\beta_4 >0, \beta_5 > 0)$, it is an indicator function
+```{r}
+(prob_1c=mean(mcmcChain[,"be[4]"]>0)*mean(mcmcChain[,"be[5]"]>0))
+```
+
+
+
+#### (d) 
+Evaluate the posterior probability that $\beta_4 \beta_5 > 0$
+```{r}
+(prob_1d=mean(mcmcChain[,"be[4]"]*mcmcChain[,"be[5]"]>0))
+```
+
+
+#### (e):
+Evaluate the predictive probability that a single cell from an additional 15’th mouse has a SomaSize > 110 assuming it receives the Pten virus in the fatty acid environment: 
+
+what we need to calculate is $P(Somasize > 110 | trt=1, FA)$
+```{r}
+theta15=rnorm(nrow(mcmcChain),mcmcChain[,"la"],sqrt(mcmcChain[,"tau"])) #mean for new mouse
+mn=theta15+mcmcChain[,"be[1]"]+mcmcChain[,"be[3]"]+mcmcChain[,"be[4]"] #mean for cell
+if (hetvar==1) {
+ sd=sqrt(mcmcChain[,"sigma[1]"])
+} else {
+ sd=sqrt(mcmcChain[,"sigma"])	
+}
+y15e=rnorm(nrow(mcmcChain),mn,sd) #soma-size for cell
+(prob_1e=mean(y15e>110))
+```
+
+
+
+
+#### (f):
+Evaluate the predictive probability that a single cell from an additional 15’th mouse has a SomaSize > 110 assuming it receives the Pten virus in the vehicle control environment: 
+
+```{r}
+mn=theta15+mcmcChain[,"be[3]"] #mean for cell
+y15f=rnorm(nrow(mcmcChain),mn,sd) #soma-size for cell
+(prob_1f=mean(y15f>110))
+```
+
+
+### 2):
+```{r}
+hetvar=1 #Switches between homogeneous and heterogeneous models
+if (hetvar==1) {
+ JAGScode<-"PtenBayesHet.bug"
+ IC<-list(be=c(0, 0, 0, 0, 0), isigma=rep(0.05, 14), la = 100, itau=0.1)
+} else {
+ JAGScode<-"PtenBayes.bug"
+ IC<-list(be=c(0, 0, 0, 0, 0), isigma=0.05, la = 100, itau=0.1)	
+}
+
+
+#Define parameters and operating characteristics of MCMC procedure
+parameters = c("be", "th", "sigma", "la", "tau", "ICC")    # The parameter(s) to be monitored.
+adaptSteps = 500              # Number of steps to "tune" the samplers.
+burnInSteps = 20000            # Number of steps to "burn-in" the samplers.
+nChains = 3                   # Number of chains to run.
+numSavedSteps=150000           # Total number of steps in chains to save.
+thinSteps=1                   # Number of steps to "thin" (1=keep every step).
+nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains ) # Steps per chain.
+
+#Make an object for fitting model using JAGS
+jagsModel = model<-jags.model(JAGScode,data=Ptendata,inits=IC,n.chains=nChains)
+
+
+# Burn-in phase of model estimation:
+cat( "Burning in the MCMC chain...\n" )
+update( jagsModel , n.iter=burnInSteps )
+
+# Main phase of MCMC model: draws from the posterior distribution are saved in codaSamples
+cat( "Sampling final MCMC chain...\n" )
+codaSamples = coda.samples( jagsModel , variable.names=parameters ,
+                            n.iter=nIter , thin=thinSteps )
+# resulting codaSamples object has these indices:
+#   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]
+
+mcmcChain = as.matrix( codaSamples )
+summary(mcmcChain)
+
+
+```
+
+
+
+#### (a) 
+Evaluate the posterior probability that $\beta_4 > 5$
+```{r}
+be4 = mcmcChain[,"be[4]"]
+p1 = length(be4[be4>5])/length(be4)
+print(p1)
+
+# or 
+(prob_2a=mean(mcmcChain[,"be[4]"]>5))
+```
+
+
+
+#### (b) 
+Evaluate the posterior probability that $\beta_4 - \beta_5 > 5$
+```{r}
+(prob_2b=mean(mcmcChain[,"be[4]"]-mcmcChain[,"be[5]"]>0))
+```
+
+
+
+#### (c) 
+Evaluate the posterior probability that $I(\beta_4 >0, \beta_5 > 0)$
+```{r}
+(prob_2c=mean(mcmcChain[,"be[4]"]>0)*mean(mcmcChain[,"be[5]"]>0))
+```
+
+
+#### (d) 
+Evaluate the posterior probability that $\beta_4 \beta_5 > 0$
+```{r}
+(prob_2d=mean(mcmcChain[,"be[4]"]*mcmcChain[,"be[5]"]>0))
+```
+
+
+#### (e):
+Evaluate the predictive probability that a single cell from an additional 15’th mouse has a SomaSize > 110 assuming it receives the Pten virus in the fatty acid environment: 
+
+what we need to calculate is $P(Somasize > 110 | trt=1, FA)$
+```{r}
+theta15=rnorm(nrow(mcmcChain),mcmcChain[,"la"],sqrt(mcmcChain[,"tau"])) #mean for new mouse
+mn=theta15+mcmcChain[,"be[1]"]+mcmcChain[,"be[3]"]+mcmcChain[,"be[4]"] #mean for cell
+if (hetvar==1) {
+ sd=sqrt(mcmcChain[,"sigma[1]"])
+} else {
+ sd=sqrt(mcmcChain[,"sigma"])	
+}
+y15e=rnorm(nrow(mcmcChain),mn,sd) #soma-size for cell
+(prob_2e=mean(y15e>110))
+
+```
+
+
+
+
+#### (f):
+Evaluate the predictive probability that a single cell from an additional 15’th mouse has a SomaSize > 110 assuming it receives the Pten virus in the vehicle control environment: 
+
+```{r}
+mn=theta15+mcmcChain[,"be[3]"] #mean for cell
+y15f=rnorm(nrow(mcmcChain),mn,sd) #soma-size for cell
+(prob_2f=mean(y15f>110))
+
+```
+
+
+### 3):
+
+#### (a):
+```{r}
+sigma12 = mcmcChain[,"sigma[12]"]
+psd = sd(sigma12)
+print(psd)
+```
+
+#### (b):
+```{r}
+sigma5 = mcmcChain[,"sigma[5]"]
+
+cnt = 0
+for (i in seq(1,length(sigma12))){
+  if (sigma12[i] >sigma5[i]){
+    cnt = cnt + 1
+  }
+}
+p7 = cnt/length(sigma12)
+print(p7)
+```
+
+#### (c):
+```{r}
+icc12 = mcmcChain[,"ICC[12]"]
+icc5 = mcmcChain[,"ICC[5]"]
+
+cnt = 0
+for (i in seq(1,length(icc12))){
+  if (icc12[i] >icc5[i]){
+    cnt = cnt + 1
+  }
+}
+p8 = cnt/length(icc12)
+print(p8)
+```
+```{r}
+(p7+p8)
+```
+I realized that the sum of the posterior probability from (b) and (c) equals 1. In other words, the posterior probability of $\sigma_{12}^2 > \sigma_5^2$ + the posterior probability of $ICC_{12}^2 > ICC_5^2$ = 1.
+
+## Computation problem: Implementation of your own MCMC
+```{r}
+JAGScode<-"BerhensFisher.bug"
+# simulate mu_0 and mu_1 1000 times
+n <- 1000
+y0 <- 1.013 + (0.24/sqrt(32))*rt(n,31)
+y1 <- 1.173 + (0.20/sqrt(36))*rt(n,35)
+survdata<-data.frame(cbind(y1=y1,y0=y0))
+
+IC<-list(th1=0.1, th0=0.1, prec1=1, prec0=1) #Initial values
+ 
+#Define parameters and operating characteristics of MCMC procedure
+parameters = c("diff","prod","ratio","cubediff","stddiff","varratio","diffge5","cubediffge0","th1", "th0", "var1", "var0")    # The parameter(s) to be monitored.
+adaptSteps = 500              # Number of steps to "tune" the samplers.
+burnInSteps = 1000            # Number of steps to "burn-in" the samplers.
+nChains = 3                   # Number of chains to run.
+numSavedSteps=60000           # Total number of steps in chains to save.
+thinSteps=1                   # Number of steps to "thin" (1=keep every step).
+nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains ) # Steps per chain.
+
+#Make an object for fitting model using JAGS
+jagsModel = model<-jags.model(JAGScode,data=survdata,inits=IC,n.chains=nChains)
+
+# Burn-in phase of model estimation:
+cat( "Burning in the MCMC chain...\n" )
+update( jagsModel , n.iter=burnInSteps )
+
+# Main phase of MCMC model: draws from the posterior distribution are saved in codaSamples
+cat( "Sampling final MCMC chain...\n" )
+codaSamples = coda.samples( jagsModel , variable.names=parameters ,
+                            n.iter=nIter , thin=thinSteps )
+# resulting codaSamples object has these indices:
+#   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]
+
+mcmcChain = as.matrix( codaSamples )
+summary(mcmcChain)
+
+
+## Prepare for and implement post model-fitting computations to check whether chain converged ##
+
+diffSample = mcmcChain[,"diff"] # Put sampled values in a vector.
+prodSample = mcmcChain[,"prod"]
+ratioSample = mcmcChain[,"ratio"]
+cubediffSample = mcmcChain[,"cubediff"]
+stddiffSample = mcmcChain[,"stddiff"]
+varratioSample = mcmcChain[,"varratio"]
+```
+
+#### 1 - 6:
+```{r}
+#Posterior point estimates and 95% equal-tail posterior credible intervals
+outdata=matrix(0,6,3)
+outdata[1,]=c(mean(diffSample),quantile(diffSample,c(0.025,0.975)))
+outdata[2,]=c(mean(prodSample),quantile(prodSample,c(0.025,0.975)))
+outdata[3,]=c(mean(ratioSample),quantile(ratioSample,c(0.025,0.975)))
+outdata[4,]=c(mean(cubediffSample),quantile(cubediffSample,c(0.025,0.975)))
+outdata[5,]=c(mean(stddiffSample),quantile(stddiffSample,c(0.025,0.975)))
+outdata[6,]=c(mean(varratioSample),quantile(varratioSample,c(0.025,0.975)))
+
+outdata = as.data.frame(outdata)
+colnames(outdata) <- c("Point Estimator", "Lower Credible Interval", "Higher CI")
+rownames(outdata) <- c("diff","prod", "ratio","cubediff", "stddiff", "varratio")
+outdata
+```
+
+#### 7):
+$Pr (\theta_{diff}>0.04|𝑌)$
+
+```{r}
+df1 = diffSample[diffSample>0.04]
+p1 = length(df1)/length(diffSample)
+print(p1)
+```
+
+#### 8):
+$Pr (\theta_{skew.diff}>45|𝑌)$
+```{r}
+df2 = cubediffSample[cubediffSample>45]
+p2 = length(df2)/length(cubediffSample)
+print(p2)
+```
+
+
+#### Monitor convergence of chain and compute convergence diagnostics for the terms 
+in 1):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(diffSample[1:nIter],diffSample[(nIter+1):(2*nIter)],diffSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+diffSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+diffSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+diffSample[2*nIter+i])/i
+}
+mn=mean(diffSample); sd=sqrt(var(diffSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+```
+
+in 2):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(prodSample[1:nIter],prodSample[(nIter+1):(2*nIter)],prodSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+prodSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+prodSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+prodSample[2*nIter+i])/i
+}
+mn=mean(prodSample); sd=sqrt(var(prodSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+
+```
+
+
+in 3):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(ratioSample[1:nIter],ratioSample[(nIter+1):(2*nIter)],ratioSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+ratioSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+ratioSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+ratioSample[2*nIter+i])/i
+}
+mn=mean(ratioSample); sd=sqrt(var(ratioSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+```
+
+in 4):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(cubediffSample[1:nIter],cubediffSample[(nIter+1):(2*nIter)],cubediffSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+cubediffSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+cubediffSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+cubediffSample[2*nIter+i])/i
+}
+mn=mean(cubediffSample); sd=sqrt(var(cubediffSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+```
+
+in 5):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(stddiffSample[1:nIter],stddiffSample[(nIter+1):(2*nIter)],stddiffSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+stddiffSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+stddiffSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+stddiffSample[2*nIter+i])/i
+}
+mn=mean(stddiffSample); sd=sqrt(var(stddiffSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+```
+
+in 6):
+```{r}
+#Trace plots of long-run averages
+par(mfrow=c(1,1), srt=0, mai=c(0.6, 0.6, 0.4, 0.2), mgp=c(2,1,0))
+trpSample=cbind(varratioSample[1:nIter],varratioSample[(nIter+1):(2*nIter)],varratioSample[(2*nIter+1):(3*nIter)])
+for (i in 2:nIter) {
+ trpSample[i,1]=((i-1)*trpSample[i-1,1]+varratioSample[i])/i	
+ trpSample[i,2]=((i-1)*trpSample[i-1,2]+varratioSample[nIter+i])/i
+ trpSample[i,3]=((i-1)*trpSample[i-1,3]+varratioSample[2*nIter+i])/i
+}
+mn=mean(varratioSample); sd=sqrt(var(varratioSample))
+plot(trpSample[,1],type='l',ylim=c(mn-sd,mn+sd),xlim=c(0,500),
+ main='Trace plot of posterior mean for 3 chains',
+ xlab='Draw',
+ ylab='Mean')
+lines(trpSample[,2],type='l',col='red')
+lines(trpSample[,3],type='l',col='green')
+```
+
