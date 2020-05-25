@@ -1,5 +1,5 @@
 ---
-title: "QBS122 Assignment 6"
+title: "Bayesian Analysis"
 output:
   html_document: default
   pdf_document: default
