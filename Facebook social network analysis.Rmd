@@ -1,5 +1,5 @@
 ---
-title: "QBS122 Final Project"
+title: "Facebook Social Network Project"
 output: html_document
 ---
 
