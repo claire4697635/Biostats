@@ -1,0 +1,55 @@
+---
+title: "ALS project"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Read the data:
+```{r}
+setwd("~/Desktop/ALS project")
+ALS <- read.csv("SYMPH_mat_pest_20200607.csv",head=T,sep=",")
+```
+
+
+### Exploratory analysis:
+
+Step 1: Find the year that splits the data to 2:1. Obtain the "old_ALS" data and "recent_ALS" data.
+```{r}
+library(dplyr)
+
+sum(is.na(ALS$dx_year))
+ALS %>% count(dx_year)
+ALS %>% count(ALS_stat)
+
+# the table that identifies the year as a threshold
+(year_split <- ALS %>% count(dx_year, ALS_stat))
+# remove the last row
+year_split <- year_split[1:7,]
+# calculate the cumulative summation of ALS stat in years sequentially
+year_split['stat_sum'] <- cumsum(year_split$n)
+# find the target year (with the cumulative probability)
+year_split['cum_prob'] <- year_split$stat_sum/26199 
+year_split # year 2016 is the threshold
+
+# subset the 2 datsets: with a ratio of 0.65:0.35
+old_ALS <- subset(ALS, dx_year<2017) 
+recent_ALS <- subset(ALS, dx_year>2016)
+```
+
+
+step 2: Random assign the data to the training and testing sets
+```{r}
+# because it is random, we don't end up with exactly a 65/35 split - do we need the proportions exact or do we want to sample according to those probabilities? 
+Train_test <- sample(c("Train", "Test"), nrow(old_ALS), prob = c(0.65, 0.35), replace = TRUE)
+old_ALS <- cbind(Train_test,old_ALS) 
+
+Train_test <- sample(c("Train", "Test"), nrow(recent_ALS), prob = c(0.35, 0.65), replace = TRUE)
+recent_ALS <- cbind(Train_test,recent_ALS)
+
+new_ALS <- rbind(old_ALS, recent_ALS)
+```
