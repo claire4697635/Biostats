@@ -39,19 +39,22 @@ year_split # year 2016 is the threshold
 # subset the 2 datsets: with a ratio of 0.65:0.35
 old_ALS <- subset(ALS, dx_year<2017) 
 recent_ALS <- subset(ALS, dx_year>2016)
+no_ALS <-  subset(ALS, is.na(ALS[,8])) # or subset(ALS, ALS_stat=0))
 ```
 
 
 step 2: Random assign the data to the training and testing sets
 ```{r}
-# because it is random, we don't end up with exactly a 65/35 split - do we need the proportions exact or do we want to sample according to those probabilities? 
-Train_test <- sample(c("Train", "Test"), nrow(old_ALS), prob = c(0.65, 0.35), replace = TRUE)
-old_ALS <- cbind(Train_test,old_ALS) 
+Train_test <- sample(c("Train", "Test"), nrow(no_ALS), prob = c(0.65, 0.35), replace = TRUE)
+new_ALS <- cbind(Train_test,no_ALS) 
 
-Train_test <- sample(c("Train", "Test"), nrow(recent_ALS), prob = c(0.35, 0.65), replace = TRUE)
-recent_ALS <- cbind(Train_test,recent_ALS)
+Train_test <- matrix('Train',17119,1)
+old_ALS <- cbind(Train_test, old_ALS)
 
-new_ALS <- rbind(old_ALS, recent_ALS)
+Train_test <- matrix('Test',9080,1)
+recent_ALS <- cbind(Train_test, recent_ALS)
+
+new_ALS <- rbind(new_ALS, old_ALS, recent_ALS)
 reference <- new_ALS[,c('CCID','dx_year', 'Train_test')]
 
 write.csv(new_ALS,'new_ALS.csv',row.names=FALSE)
