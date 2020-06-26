@@ -52,4 +52,61 @@ Train_test <- sample(c("Train", "Test"), nrow(recent_ALS), prob = c(0.35, 0.65),
 recent_ALS <- cbind(Train_test,recent_ALS)
 
 new_ALS <- rbind(old_ALS, recent_ALS)
+reference <- new_ALS[,c('CCID','dx_year', 'Train_test')]
+
+write.csv(new_ALS,'new_ALS.csv',row.names=FALSE)
+write.csv(reference, 'data_split_assignment.csv',row.names=FALSE)
+```
+
+Step 3: data cleaning
+
+eliminate the columns that have more than 80% NA's:
+```{r}
+new_ALS <- read.csv("new_ALS.csv")
+train <- subset(new_ALS, Train_test=='Train') 
+
+na <- sapply(train, function(x) sum(is.na(x)))
+col_name <- names(train)
+
+
+for (i in c(14:459)){
+  prop <- na[i]/dim(train)[1]
+  if (prop > 0.8){
+    train[ ,col_name[i]] <- list(NULL)
+  }
+}
+# from the above results, we found and dropped 164 columns that have more than 80% NA's.
+
+cnt = 0
+for (i in c(14:295)){
+  prop <- na[i]/dim(train)[1]
+  if (prop > 0.5){
+    cnt = cnt + 1
+  }
+}
+cnt #there are still 149 predictors have more than 50% NA's 
+```
+
+
+Approach 1: use the smallest non-NA value then divide it by 2
+```{r}
+train_1 <- train
+min_val=0
+for (i in c(14:295)){
+  min_val <- min(train_1[,i],na.rm=TRUE) 
+  train_1[,i][is.na(train_1[,i])] <- min_val/2
+}
+sum(is.na(train_1[,c(14:295)]))
+```
+
+Approach 2: categorize the values to be NA = 0, lower than the median of the non-NA's = 1, higher than the median of the non-NA's = 2
+```{r}
+train_2 <- train
+for (i in c(14:295)){
+  median_val <- median(train_2[,i], na.rm=TRUE)
+  train_2[,i] <- replace(train_2[,i], train_2[,i] < median_val,1)
+  train_2[,i] <- replace(train_2[,i], train_2[,i] >= median_val,2)
+}
+
+train_2[,c(14:295)][is.na(train_2[,c(14:295)])] <- 0
 ```
