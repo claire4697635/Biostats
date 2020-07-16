@@ -113,3 +113,189 @@ for (i in c(14:295)){
 
 train_2[,c(14:295)][is.na(train_2[,c(14:295)])] <- 0
 ```
+
+
+Glinternet on Approach 1 - glinternet
+```{r}
+library(glinternet)
+X_1 <- train_1[,c(14:295)]
+X_1 <- as.matrix(X_1)
+Y_1 <- train_1[,11]
+
+numLevels = rep(1,282) # 282 predictors, set nlevel = 1 for continuous features
+g_fit <- glinternet.cv(X_1, Y_1, numLevels, nFolds = 3, family = "binomial")
+
+save.image(file='myEnvironment_continuous.RData')
+print(g_fit) # default nLambda = 50
+
+# i_1Std <- which(g_fit$lambdaHat1Std == g_fit$lambda)
+coeffs <- coef(g_fit)[[50]]
+
+coeffs$interactions$contcont
+
+table(Y_1)
+```
+
+Glinternet on Approach 2 - glinternet.cv
+```{r}
+# https://strakaps.github.io/post/glinternet/
+X_2 <- train_2[,c(14:295)]
+X_2 <- as.matrix(X_2)
+Y_2 <- train_2[,11]
+
+numLevels = rep(3,282)
+set.seed(1001)
+gcv_fit <- glinternet.cv(X_2, Y_2, numLevels, nFolds=3, family = "binomial")
+
+# glinternet.cv
+# lambdaHat
+# lanbdahat1std
+#nFolds = 3
+
+save.image(file='myEnvironment.RData')
+```
+
+
+cross-valid Glinternet on continuous variables
+```{r}
+# The continuous-variable version by feeding in X_1, Y_1 from approach 1, first run:
+# g_fit <- glinternet.cv(X_1, Y_1, numLevels, nFolds = 3, family = "binomial") 
+setwd("~/Desktop/ALS project")
+load('myEnvironment_numerical.RData')
+library(glinternet)
+
+# a plot that shows CV errors vs. lambda index. the dashed line represents lambdaHat index
+plot(g_fit)
+
+
+g_fit$lambdaHat1Std
+(which(g_fit$lambdaHat1Std == g_fit$lambda))
+
+g_fit$lambdaHat
+(i <- which(g_fit$lambdaHat == g_fit$lambda))
+
+coefs <- coef(g_fit$glinternetFit)[[i]]
+
+# build a table that saves the indices of attributes per pair of interaction
+coefs$interactions$contcont
+sum_table <- as.matrix(coefs$interactions$contcont)
+colnames(sum_table) <- c('Att_1_index','Att_2_index')
+
+
+# build a table that saves the names of attributes per pair of interaction
+name_arr <- names(train_1[14:295])
+name_table <- matrix(0,20,2)
+for (i in 1:20){
+  #x <- sum_table[i,1]
+  #y <- sum_table[i,2]
+  name_table[i,1] <- name_arr[sum_table[i,1]]
+  name_table[i,2] <- name_arr[sum_table[i,2]]
+}
+colnames(name_table) <- c('Att_1_name','Att_2_name')
+
+
+sum_table <- cbind(sum_table, name_table)
+sum_table <- as.data.frame(sum_table)
+sapply(sum_table,class)
+sum_table$Att_1_index <- as.numeric(as.character(sum_table$Att_1_index))
+sum_table$Att_2_index <- as.numeric(as.character(sum_table$Att_2_index))
+print(sum_table)
+
+
+# exlore the main effect attributes
+coefs$mainEffects$cont
+length(coefs$mainEffects$cont)
+#coefs$mainEffectsCoef
+
+# build a table that saves main effect coefficients:
+main_effect_table <- matrix(0,36,2)
+for (i in 1:36){
+  main_effect_table[i,1] <- coefs$mainEffects$cont[i]
+  main_effect_table[i,2] <- coefs$mainEffectsCoef$cont[[i]]
+}
+colnames(main_effect_table) <- c('Att_name','Coefficient')
+main_effect_table <- as.data.frame(main_effect_table)
+print(main_effect_table)
+
+# combine the main_effect_table and sum_table
+library(dplyr)
+sum_table <- left_join(sum_table, main_effect_table, by = c("Att_1_index" = "Att_name"))
+#rename(sum_table, Att_1_main_coefs = Coefficient)
+names(sum_table)[names(sum_table) == "Coefficient"] <- "Att_1_main_coefs"
+sum_table <- left_join(sum_table, main_effect_table, by = c("Att_2_index" = "Att_name"))
+names(sum_table)[names(sum_table) == "Coefficient"] <- "Att_2_main_coefs"
+
+# build the table that saves the corresponding coefficients
+sum_table[,"interaction_coef"] <- NA
+for (i in 1:20){
+  sum_table[i,7] <- coefs$interactionsCoef$contcont[[i]]
+}
+print(sum_table)
+```
+
+
+Generate the test set
+```{r}
+
+coef_table <- read.csv("interaction table.csv")
+test <- subset(new_ALS, Train_test=='Test')
+
+# select the columns that exist in the train set:
+test_no_clean <- test[names(train_2[1:295])]
+
+#categorize the test set:
+for (i in c(14:295)){
+  median_val <- median(test_no_clean[,i], na.rm=TRUE)
+  test_no_clean[,i] <- replace(test_no_clean[,i], test_no_clean[,i] < median_val,1)
+  test_no_clean[,i] <- replace(test_no_clean[,i], test_no_clean[,i] >= median_val,2)
+}
+
+test_no_clean[,c(14:295)][is.na(test_no_clean[,c(14:295)])] <- 0
+
+# generate X, Y, Age, and Sex to fit in the glm model:
+X_2_test <- test_no_clean[,c(14:295)]
+X_2_test <- as.matrix(X_2_test)
+Y_2_test <- test_no_clean[,11]
+Age <- test_no_clean[,10]
+Sex <- test_no_clean[,7]
+
+max(X_2_test)
+min(X_2_test)
+for (i in name_arr){
+  X_2_test[, i] <- factor(X_2_test[, i])
+}
+
+X_2_test[,i]
+names(X_2_test)
+class(X_2_test[1,1])
+
+sapply(X_2_test,class)
+
+summary(glm(Y_2_test ~ Age + Sex + X_2_test[,1]* X_2_test[,187]))
+
+
+# Build a table that saves the estimated coefficient and p-value for the interaction pairs
+test_table <- matrix(0,603,2)
+for (i in c(1:603)){
+  x1 <- coef_table[i,1]
+  x2 <- coef_table[i,2]
+  test_table[i,1] <- summary(glm(Y_2_test ~ Age + Sex + X_2_test[,x1]* X_2_test[,x2]))$coefficients[6,1]
+  test_table[i,2] <- summary(glm(Y_2_test ~ Age + Sex + X_2_test[,x1]* X_2_test[,x2]))$coefficients[6,4]
+}
+colnames(test_table) <- c('Estimated_Coef', 'p_value')
+
+coef_table <- cbind(coef_table, test_table)
+```
+
+
+Explore the table:
+```{r}
+new_coef <- coef_table[coef_table$p_value <0.05,]
+dim(new_coef) # 235 pairs are significant
+
+names(new_coef)
+
+#write.csv(new_coef,'table with p value.csv',row.names=FALSE)
+
+new_coef[new_coef$Estimated_Coef>0,]
+```
