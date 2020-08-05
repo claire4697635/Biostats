@@ -299,3 +299,41 @@ names(new_coef)
 
 new_coef[new_coef$Estimated_Coef>0,]
 ```
+
+
+```{r}
+library(fdrtool)
+fdr = fdrtool(sum_table$p_value, statistic="pvalue")
+sum_table[,'p_adjusted'] <- fdr$pval
+
+dim(sum_table)
+
+sum_table <- sum_table[sum_table$p_adjusted <0.2,]
+sum_table <- sum_table[sum_table$int_coef_glm>0,]
+
+
+library(tableone)
+
+table1 <- CreateTableOne(vars = c( 'sex', 'age_cat'),
+                         data = test_3,
+                         factorVars = c('sex', 'age_cat'  ),  
+                         strata = 'ALS_stat')
+table1 <- print(table1,
+                printToggle = FALSE,
+                noSpaces = TRUE, quote = TRUE, showAllLevels = TRUE)
+table1
+
+table2 <- CreateTableOne(vars = c( 'sex', 'age_cat'),
+                         data = train_2,
+                         factorVars = c('sex', 'age_cat'  ),  
+                         strata = 'ALS_stat')
+table2 <- print(table2,
+                printToggle = FALSE,
+                noSpaces = TRUE, quote = TRUE, showAllLevels = TRUE)
+
+table_sum <- cbind(table1,table2)
+write.csv(table_sum, "tableone.csv")
+
+
+summary(table1)
+```
