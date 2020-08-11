@@ -314,26 +314,22 @@ sum_table <- sum_table[sum_table$int_coef_glm>0,]
 
 library(tableone)
 
-table1 <- CreateTableOne(vars = c( 'sex', 'age_cat'),
+att = c("ALDICARB", "FLONICAMID", "KAOLIN.CLAY", "PROHEXADIONE", "FENARIMOL", "TRIASULFURON", "OXAMYL", "PYRIPROXYFEN")
+table1 <- CreateTableOne(vars = att,
                          data = test_3,
-                         factorVars = c('sex', 'age_cat'  ),  
                          strata = 'ALS_stat')
-table1 <- print(table1,
-                printToggle = FALSE,
-                noSpaces = TRUE, quote = TRUE, showAllLevels = TRUE)
-table1
+table1 <- print(table1, showAllLevels = TRUE,  formatOptions = list(big.mark = ","))
+summary(table1)
 
-table2 <- CreateTableOne(vars = c( 'sex', 'age_cat'),
+table2 <- CreateTableOne(vars = att,
                          data = train_2,
-                         factorVars = c('sex', 'age_cat'  ),  
                          strata = 'ALS_stat')
-table2 <- print(table2,
-                printToggle = FALSE,
-                noSpaces = TRUE, quote = TRUE, showAllLevels = TRUE)
+table2 <- print(table2, showAllLevels = TRUE,  formatOptions = list(big.mark = ","))
+summary(table2)
 
-table_sum <- cbind(table1,table2)
+table_sum <- rbind(table1,table2)
 write.csv(table_sum, "tableone.csv")
 
 
-summary(table1)
+
 ```
