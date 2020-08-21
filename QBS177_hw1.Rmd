@@ -1,0 +1,63 @@
+---
+title: "QBS 177 HW 1"
+output: html_document
+Author: Claire Wang
+---
+QBS 177 HW 1
+Author: Claire Wang
+
+
+Question 1:
+```{r}
+x <- c(3,7,8)
+y <- c(6,5,4)
+z <- c(2,0,9)
+M <- cbind(x, y, z)
+M <- as.matrix(M)
+M
+```
+
+Question 2:
+```{r}
+vec <- seq(1:12)
+B <- matrix(vec, nrow = 4, ncol = 3)
+B
+tB <- t(B)
+tB
+#tB %*% tB
+
+```
+A 3×4 matrix multiplied by a 3×4 matrix is not allowed. Because the number of columns (4) of the 1st matrix does not equal the number of rows (3) of the 2nd matrix.
+We would get an error warning: Error in tB %*% tB : non-conformable arguments.
+
+
+
+
+Quetion 3:
+```{r}
+r1 <- runif(100)
+(A1 <- matrix(r1, nrow = 10, ncol = 10))
+
+r2 <- runif(120)
+(A2 <- matrix(r2, nrow = 10, ncol = 12))
+
+(M <- solve(A1, A2))
+```
+
+Question 4:
+```{r}
+n <-10000  # your choice
+CLT_results <- c()
+#initialize a vector
+for(i in 1:n){
+first_toss <- sample(1:6, size=1)
+second_toss <- sample(1:6, size=1)
+result_i <- first_toss + second_toss
+CLT_results <- c(CLT_results, result_i)
+# append to vector
+}
+hist(CLT_results, xlab="")
+
+plot(density(CLT_results, adjust = 3)) #visualize
+
+```

@@ -1,0 +1,368 @@
+---
+title: "QBS177_midterm"
+output: html_document
+---
+
+# QBS 177 Midterm
+
+## 1.
+
+### 1.a):
+```{r}
+setwd("~/Documents/QBS 177")
+load("dbp.R")
+snp <- dbp[,c(9:28)]
+
+# genotype from nominal to numeric
+for (i in 1:20){
+snp[,i] <- as.numeric(snp[,i])
+}
+
+# glm analysis
+o.all.1 <- matrix(0,20,4)
+for (i in 1:20) {
+o.all.1[i,] <- summary(glm(dbp$affection ~ dbp$sex + dbp$age + snp[,i], family=binomial("logit")))$coef[4,]
+}
+colnames(o.all.1) <- c("Estimate","Std. Error", "z value", "Pr(>|z|)")
+rownames(o.all.1) <-c("snp01","snp02","snp03","snp04","snp05","snp06","snp07","snp08","snp09","snp10","snp11","snp12","snp13","snp14","snp15","snp16","snp17","snp18","snp19","snp20")
+o.all.1
+
+# top 5 SNPs with the strongest association
+sort(o.all.1[,4], decreasing = FALSE)[1:5]
+```
+
+
+### 1.b):
+```{r}
+# lm analysis
+o.all.2 <- matrix(0,20,4)
+for (i in 1:20) {
+o.all.2[i,] <- summary(lm(dbp$trait ~ dbp$sex + dbp$age + snp[,i]))$coef[4,]
+}
+colnames(o.all.2) <- c("Estimate","Std. Error", "z value", "Pr(>|z|)")
+rownames(o.all.2) <-c("snp01","snp02","snp03","snp04","snp05","snp06","snp07","snp08","snp09","snp10","snp11","snp12","snp13","snp14","snp15","snp16","snp17","snp18","snp19","snp20")
+o.all.2
+
+# top 10 SNPs with the strongest association
+sort(o.all.2[,4], decreasing = FALSE)[1:5]
+```
+
+
+
+### 1.c
+```{r}
+affection <- dbp$affection
+sex <- dbp$sex
+age <- dbp$age
+data <- cbind(affection,sex,age,snp)
+
+o.all.3 <- matrix(0,190,7)
+ n <- 1
+  for (i in 4:22)
+    {
+     for (j in (i+1):23)
+       {
+        o <- summary(glm(affection ~ sex + age + data[,i]*data[,j] ,data=data, family=binomial("logit")))$coef[5,]
+        #print(o)
+        o.all.3[n,c(4:7)] <- o
+        o.all.3[n,1] <- n
+        o.all.3[n,2] <- i-3
+        o.all.3[n,3] <- j-3
+        n <- n +1
+     }
+  }
+colnames(o.all.3) <- c("Order", "snp_i", "snp_j", "Estimate","Std. Error", "z value", "Pr(>|z|)")
+
+order(o.all.3[,7], decreasing = FALSE)[1:10]
+
+o.all.3.adjust <- o.all.3[,c(2,3,7)]
+
+o.all.3.adjust[c(116,11,119,122,14,99,168,17,164,166),]
+
+```
+
+
+### 1.d
+```{r}
+# for 1a
+o.all.1.p <- p.adjust(o.all.1[,4], method="hochberg")
+sort(o.all.1.p, decreasing = FALSE)[1:10]
+# significant p-values
+o.all.1.p[o.all.1.p<0.05]
+
+
+# for 1b
+o.all.2.p <- p.adjust(o.all.2[,4], method="hochberg")
+sort(o.all.2.p, decreasing = FALSE)[1:10]
+# significant p-values
+o.all.2.p[o.all.2.p<0.05]
+
+# for 1c
+o.all.3.p <- o.all.3.adjust
+o.all.3.p[,3] <- p.adjust(o.all.3.adjust[,3], method="hochberg")
+sort(o.all.3.p, decreasing = FALSE)[1:10]
+
+# significant p-values
+o.all.3.p[o.all.3.p<0.05]
+o.all.3.p[116,]
+o.all.3.p[11,]
+
+```
+
+
+## 2
+
+### 2.a):
+```{r}
+x <- c(2.5,0.5,2.2,1.9,3.1,2.3,2,1,1.5,1.1)
+y <- c(2.4,0.7,2.9,2.2,3.0,2.7,1.6,1.1,1.6,0.9)
+pca.example <- cbind(x,y)
+
+
+# write a covariance matrix function
+sample.cov <- function(x){
+    k <- ncol(x) #number of variables
+    n <- nrow(x) #number of subjects
+ 
+    #create means for each column
+    x_mean <- matrix(data=1, nrow=n) %*% cbind(mean(x[,1]),mean(x[,2])) 
+ 
+    #creates a difference matrix
+    D <- x - x_mean
+    #creates the covariance matrix
+    C <- (n-1)^-1*t(D) %*% D
+    return(C)
+}
+
+(covariance.matrix <- sample.cov(pca.example))
+cov(pca.example)
+```
+My sample.cov function passes the same covariance matrix as cov() does.
+
+
+
+### 2.b):
+det(lambda*I - x) = 0, x is our 2x2 covariance matrix:
+
+$(x[1,1] - \lambda)(x[2,2] - \lambda) - x[1,2]x[2,1] = 0$
+  
+then $\lambda^2 - (x[1,1]+x[2,2])\lambda + (x[1,1]x[2,2]-x[1,2]x[2,1]) = 0$
+
+relate the above function to $a^2x + bx + c = 0$
+
+$a = 1$, $b = - (x[1,1]+x[2,2])$, $c = (x[1,1]x[2,2]-x[1,2]x[2,1])$
+```{r}
+
+# Constructing Quadratic Formula
+sample.eigenvalue <- function(x){
+      delta<-function(a,b,c){
+          return(b^2-4*a*c)
+      }
+      a <- 1
+      b <- -(x[1,1]+x[2,2])
+      c <- x[1,1]*x[2,2]-x[1,2]*x[2,1]
+      if(delta(a,b,c) > 0){ # first case D>0
+           lambda_1 = (-b+sqrt(delta(a,b,c)))/(2*a)
+           lambda_2 = (-b-sqrt(delta(a,b,c)))/(2*a)
+           result = c(lambda_1,lambda_2)
+      }
+     else if(delta(a,b,c) == 0){ # second case D=0
+        lambda = -b/(2*a)
+      }
+      else {"There are no real roots."} # third case D<0
+}
+
+
+( lambda <- sample.eigenvalue(covariance.matrix))
+eigen(covariance.matrix)$values
+(prcomp(pca.example)$sdev)^2
+```
+My sample.eigenvalue function passes the same eigenvalues compared to the prcomp function.
+
+### 2.c):
+x is our 2x2 covariance matrix, $(\textbf{x} - \lambda_1) \textbf{v_1} = 0$, solve for $v_1$
+```{r}
+
+v <- matrix(0,2,1)
+v[1,1] <- 1
+
+sample.eigenvector <- function(x){
+  for (i in 1:2) {
+  x_temp <- x
+  x_temp[1,1] <- x_temp[1,1]-lambda[i]
+  x_temp[2,2] <- x_temp[2,2] - lambda[i]
+  
+  # x[1,1]*v[1,1] + x[1,2]*v[2,1] = 0, let v[1,1] = 1, solve for v[2,1]
+  v_2 <- -x_temp[1,1]/x_temp[1,2]
+  v_temp <- v
+  v_temp[2,1] <- v_2
+  v_temp <- v_temp/sqrt(v_temp[1,1]^2+v_temp[2,1]^2)
+  print(v_temp)
+  }
+}
+
+
+sample.eigenvector(covariance.matrix)
+eigen(covariance.matrix)$vectors
+prcomp(pca.example)$rotation
+```
+My sample.eigenvector function passes the same eigenvectors compared to the prcomp function.
+
+
+
+## 3.
+
+### 3.a):
+
+first recreate the fulldat dataset
+```{r}
+setwd("~/Documents/QBS 177/chr22")
+files<-dir("~/Documents/QBS 177/chr22")
+length(files)
+
+
+country <- NULL
+
+for (i in 1:length(files)){
+
+temp <- substr(files[i], 6,8)    # read the population code
+country<- c(country,temp)
+
+}
+
+
+i=1
+data<-read.delim(files[i])
+nsam <- dim(data)[1]
+rmno <- (1:nsam)[is.na(data[,6])] 
+if(length(rmno)) data <- data[-rmno, ]  # remove an loci without the minor allele count
+data1 <- data[data[,3]==2, 5:6]  #only consider 1 minor allele.
+
+
+
+for (i in 2:length(files)){  # repeat for the rest of data
+
+data<-read.delim(files[i])
+if(length(rmno)) data <- data[-rmno, ]   
+data1 <- data[data[,3]==2, 5:6] + data1
+
+
+}
+
+asddd <- as.numeric(data1[,1]>=data1[,2])
+
+
+fulldat <- rep(0,length(asddd))
+
+i=1
+data<-read.delim(files[i])
+nsam <- dim(data)[1]
+rmno <- (1:nsam)[is.na(data[,6])]
+if(length(rmno)) data <- data[-rmno, ]  
+location <- data[data[,3]==2,2]    # location info
+chr <- data[data[,3]==2,1]            # chomosome info
+data2 <- data[data[,3]==2, 5:6]
+fulldat[asddd==1] <- data2[asddd==1,2]/data[1,4]   # calculate the minor allele frequncy
+fulldat[asddd==0] <- data2[asddd==0,1]/data[1,4]   # calculate the minor allele frequncy
+
+
+
+for (i in 2:length(files)){
+
+data<-read.delim(files[i])
+if(length(rmno)) data <- data[-rmno, ]
+data2 <- data[data[,3]==2, 5:6]
+tempdat <- rep(0,length(asddd))
+tempdat[asddd==1] <- data2[asddd==1,2]/data[1,4]
+tempdat[asddd==0] <- data2[asddd==0,1]/data[1,4]
+fulldat <- cbind(fulldat, tempdat)
+
+}
+
+
+```
+Noted  that the chromesome 22 are labeled as chromesome 21, but the following result will not be affected.
+
+
+```{r}
+
+# Transform the subpopulation data to 21 countries:
+dim(fulldat)
+chn <- (fulldat[,5] + fulldat[,6])/2
+ind <- (fulldat[,11] + fulldat[,14])/2
+nga <- (fulldat[,25] + fulldat[,8])/2
+usa <- (0.777*fulldat[,4] + 0.132*fulldat[,2] + 0.053*(chn + ind + fulldat[,16] + fulldat[,15])/4)/(0.777+0.132+0.053)
+fulldat <-fulldat[,c(3,1,5,7,9,12,11,24,15,17,19,25,21,20,22,18,13,23,10,4,16)]
+fulldat[,3] <- chn
+fulldat[,7] <- ind
+fulldat[,12] <- nga
+fulldat[,20] <- usa
+```
+
+Calculate the correlation between yy and all loci’s in Chromosome 22.
+```{r}
+yy <- read.delim("~/Documents/QBS 177/Lab4/smoking_outcome.txt")
+
+# calculate the correlation between yy and all loci’s in Chromosome 22.
+n <- dim(yy)[1]
+pvalue <- matrix(0,length(chr),1)
+corvalue <- matrix(0, length(chr),1)
+colnames(pvalue) <- c("prevave")
+colnames(corvalue) <- c("prevave")
+
+proc.time()
+y <- yy[,2]
+r <- suppressWarnings(apply(t(fulldat), 2, cor, y)) # obtain correlation using apply
+r1 <- 1-r^2  # mid step to calculate p-value
+r2 <- sqrt(n-2)*r/sqrt(r1)  # this is the T statistics
+#t <- r*sqrt((n-2)/(1-r2)) 
+pvalue[,1] <- 2*(1-pt(abs(r2),(n-2))) # transform T statistics to p-value, pt() for p-value
+corvalue[,1] <- r    # pass correlation to corvalue
+proc.time()
+
+# manhattan plot
+
+library(qqman)
+head(location)
+
+out <- data.frame(chr, location, pvalue)
+SNP1 <- paste('SNP', 1:1099164, sep="")
+out <- cbind(SNP1,out)
+names(out) <- c("SNP", "CHR", "BP", "P")
+manhattan(out,ylim=c(0,10), xlim=c(0, max(out[,3])))
+```
+
+### 3.b):
+
+```{r}
+location
+location.pvalue <- as.data.frame(cbind(location, pvalue))
+order(location.pvalue[,2], decreasing = FALSE)[1:4]
+
+location.pvalue[c(171220,171210, 171218, 171381),]
+```
+
+
+### 3.c):
+```{r}
+# draw scatterplot:
+par(mfrow=c(2,2))
+plot(fulldat[171220,], y)
+abline(lm(y~fulldat[171220,]), col="red")
+mtext(corvalue[171220])
+
+plot(fulldat[171210,], y)
+abline(lm(y~fulldat[171210,]), col="red")
+mtext(corvalue[171210])
+
+plot(fulldat[171218,], y)
+abline(lm(y~fulldat[171218,]), col="red")
+mtext(corvalue[171218])
+
+plot(fulldat[171381,], y)
+abline(lm(y~fulldat[171381,]), col="red")
+mtext(corvalue[171381])
+
+
+
+```

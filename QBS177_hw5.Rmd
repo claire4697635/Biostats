@@ -1,0 +1,107 @@
+---
+title: "QBS177_hw5"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## LDA - a fisher linear discriminant analysis
+```{r}
+data(iris)
+library(MASS)
+library(klaR)
+library(psych)
+```
+
+
+Prepare the means
+```{r}
+
+sepal.length <- iris$Sepal.Length
+sepal.width <- iris$Sepal.Width
+petal.length <- iris$Petal.Length
+petal.width <- iris$Petal.Width
+
+
+describeBy(iris$Sepal.Length, iris$Species)
+describeBy(iris$Sepal.Width, iris$Species)
+describeBy(iris$Petal.Length, iris$Species)
+describeBy(iris$Petal.Width, iris$Species)
+
+# mean vector class setosa
+mu.setosa <- c(5.006,3.418,1.464,0.244)
+
+# mean vector class versicolor
+mu.versicolor <- c(5.936,2.77,4.26,1.326)
+
+# # mean vector class virginica
+mu.virginica <- c(6.588,2.974,5.552,2.026)
+
+# central point (overall mean)
+mu.all <- c(mean(sepal.length),mean(sepal.width),mean(petal.length),mean(petal.width))
+
+# sample size of classes:
+n.se <- length(iris[iris$Species=="setosa",1])
+n.ve <- length(iris[iris$Species=="versicolor",1])
+n.vi <- length(iris[iris$Species=="virginica",1])
+```
+
+
+### 1. the between-class scatter matrix Sw and within-class scatter matrix Sb
+```{r}
+mu.setosa <- as.matrix(mu.setosa)
+mu.versicolor <- as.matrix(mu.versicolor)
+mu.virginica <- as.matrix(mu.virginica)
+mu.all <- as.matrix(mu.all)
+
+# between-class scatter matrix
+Sb <- n.se*(mu.setosa - mu.all)%*% (t(mu.setosa)-t(mu.all)) + n.ve*(mu.versicolor - mu.all)%*% (t(mu.versicolor)-t(mu.all)) + n.vi*(mu.virginica - mu.all)%*% (t(mu.virginica)-t(mu.all))
+
+# within-class scatter matrix
+X1 <- as.matrix(iris[iris$Species=="setosa",1:4])
+X2 <- as.matrix(iris[iris$Species=="versicolor",1:4])
+X3 <- as.matrix(iris[iris$Species=="virginica",1:4])
+
+Sw <- (t(X1)-as.vector(mu.setosa)) %*% t(t(X1)-as.vector(mu.setosa)) + (t(X2)-as.vector(mu.versicolor)) %*% t(t(X2)-as.vector(mu.versicolor)) + (t(X3)-as.vector(mu.virginica)) %*% t(t(X3)-as.vector(mu.virginica))
+
+library(DiscriMiner)
+withinSS(iris[,1:4], iris[,5])
+```
+
+
+### 2.  eigen value and eigen vector Sb/Sw, compare it with the outputs from lda function
+```{r}
+# eigenvalues
+y <- ginv(Sw)%*%Sb
+e.value <- sort(eigen(y)$values, decreasing = TRUE)
+
+
+eigen(y)
+
+eigenvector <- eigen(y)$vectors[,1:2]
+```
+The eigenvectors and eigenvalues indicate the distortion of a linear transformation. The eigenvectors are basically the direction of this distortion, and the eigenvalues are the scaling factor for the eigenvectors that describing the magnitude of the distortion.
+
+We see that the last 2 eigenvalues are close to 0.  In LDA, the number of linear discriminants is at most (# class - 1), so we only need to take a look at the eigen vector sets with the largest two eigenvalues
+
+
+```{r}
+(eigenvecetor <- eigenvector * 4)
+
+
+# LDA analysis
+(o.lda <- lda(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, iris))
+#predict <- data.frame(predict(o.lda)$x)
+#plot(o.lda)
+```
+The eigenvectors and LDA coefficient outputs are clost to each other.
+
+
+
+
+### 3. Plot one of partition plot
+```{r}
+library(klaR)
+partimat(Species ~ ., data = iris, method = "lda")
+
+```

@@ -1,0 +1,79 @@
+---
+title: "QBS177_hw4"
+output: html_document
+---
+```{r}
+library(survival)
+
+library(glmnet)
+
+setwd("~/Documents/QBS 177")
+data <- read.table("~/Documents/QBS 177/fulldat.txt", header=F)
+
+coefout <- matrix(0, 7399, 100)
+
+for (i in 1:100){
+
+id <- sample(1:240, 200)
+
+data1 <- data[id, ]
+
+surv <- data1[,1]
+
+censor <- data1[,2]
+
+gene <- data1[, -(1:2)]
+
+y=cbind(time=(surv+1),status=censor)
+
+x <- as.matrix(gene)
+
+fit2 <- glmnet(x,surv)
+
+cvfit = cv.glmnet(x, surv)
+
+plot(cvfit)
+
+cvfit$lambda.min
+
+coef.min = coef(cvfit, s = "lambda.min")[-1]
+
+coefout[,i] <- as.numeric(coef.min!=0)
+
+active.min = which(coef.min != 0)
+
+index.min = coef.min[active.min]
+
+}
+```
+The first part of the code plots the cross-validation curve produced by cv.glmnet 100 times, where the non-zero $\lambda_{min}$ values are saved in coefout. We got slightly different but overall relatively similar trends of the red MSE dots with their confidence intervals which tells the fitness of gene types and surv.
+ 
+The $\lambda_{min}$ is the one which minimizes out-of-sample loss in CV, in other words, we want to select the model for which the resulting estimated test error is the smallest.
+
+
+
+Stepwise code, edited from the provided psudo code
+```{r}
+coefout1 <- apply(coefout, 1, sum)
+summary(coefout1)
+
+plot(density(coefout1),xlim=c(-2,2))
+
+# I chose a K = 0.2822, which is around the center of the coefout1 density plot, or mean of the coefout1.
+K <- 0.2822
+active.min = which(coefout1>K)  
+
+Xsub <-x[,active.min]
+
+fit <- lm(surv~Xsub[,1] + Xsub[,2] +  Xsub[,3] + Xsub[,4] + Xsub[,5] + Xsub[,6] + Xsub[,7] + Xsub[,8] + Xsub[,9] + Xsub[,10])
+
+step <- step(fit,direction="both")  #both direction
+summary(step)
+
+
+```
+
+The stepwise regression suggests which gene types' coefficients have significant results - the ones have p-value less than 0.05 fit the model better. 
+
+To interpret the results, among the first 10 gene types(from x) with the non zero $\lambda_{min}$ values filtered from the 100-times lasso simulations, after doing the stepwise regression, the gene types with p-values less than 0.05 are significantly correlated to the surv data in fulldat, according to the threshold I chosed. It is a powerful analysis since we first do LASSO regression to pick the genes with the smallest MSE values, then do stepwise regression to fit the chosen genes to the model.
+

@@ -1,0 +1,77 @@
+---
+title: "QBS177_HW3"
+output: html_document
+---
+
+# QBS 177 HW 3
+
+### 1.
+```{r}
+PCA.1 <- read.table("~/Documents/QBS 177/PCA.example1.txt", header=TRUE)
+
+# Fill the missing values using column means.
+for(i in 1:ncol(PCA.1)){
+PCA.1[is.na(PCA.1[,i]), i] <- round(mean(PCA.1[,i], na.rm = TRUE))
+}
+sum(is.na(PCA.1))
+
+date()
+PCA.1.pc.eigen.cor <- prcomp(PCA.1)
+date()
+
+# Check the output object and identify the principle components.
+names(PCA.1.pc.eigen.cor)
+PCA1.scores.eigen <- PCA.1.pc.eigen.cor$x
+```
+
+### 2.
+```{r}
+PCA1.1 <- scale(PCA.1, scale = FALSE)
+date()
+PCA1.pc.scale.svd <- svd(PCA1.1)
+date()
+
+# 12.	Check the output object and compare with decomposition result
+names(PCA1.pc.scale.svd)
+head(PCA1.pc.scale.svd$d^2/(nrow(PCA.1)-1))
+head(PCA.1.pc.eigen.cor$sdev^2)
+
+PCA.1.pc.eigen.cor$rot[1:5,1:5]
+PCA1.pc.scale.svd$v[1:5,1:5]
+sum(abs(PCA1.pc.scale.svd$v-PCA.1.pc.eigen.cor$rot))
+
+```
+The result with spectral decomposition is the same compared to singular value decomposition while singular value decomposition runs less time than spectral decomposition.
+
+
+### 3.
+```{r}
+(PCA1.euro <- apply(PCA1.scores.eigen[19662:19826,1:2], 2, mean))
+(PCA1.asian <- apply(PCA1.scores.eigen[19827:19963,1:2], 2, mean))
+(PCA1.african <- apply(PCA1.scores.eigen[19964:20166,1:2],2,mean))
+
+(PCA1.unknown <- apply(PCA1.scores.eigen[1:19661,1:2],2,mean))
+
+PCA1.unknown-PCA1.euro
+PCA1.unknown-PCA1.asian
+PCA1.unknown-PCA1.african
+
+```
+After comparing the unknown population's centroid and comparing to the other three populations, we find out that the unknown population's result is closest to the European population.
+
+
+
+
+### 4. 
+```{r}
+# Visualize the first two principle components.
+plot(PCA1.scores.eigen[,1], PCA1.scores.eigen[,2])
+
+# replot with color coding
+plot(PCA1.scores.eigen[1:19661,1],PCA1.scores.eigen[1:19661,2],type="p",col="black",pch=1,xlab="PC1", ylab="PC2", xlim = range(PCA1.scores.eigen[,1]), ylim = range(PCA1.scores.eigen[,2]));
+points(PCA1.scores.eigen[19662:19826,1],PCA1.scores.eigen[19662:19826,2],col="red",pch=20); # euro
+points(PCA1.scores.eigen[19827:19963,1],PCA1.scores.eigen[19827:19963,2],col="green",pch=20) # asian
+points(PCA1.scores.eigen[19964:20166,1],PCA1.scores.eigen[19964:20166,2],col="blue",pch=20) # african
+title(main="Principal Components Analysis using princomp in R", col.main="black", font.main=1,outer=T)
+
+```
